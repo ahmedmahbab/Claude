@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وصل - Al Nour Elite</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: white;
+            color: #000;
+            line-height: 1.4;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .receipt {
+            width: 72mm;
+            max-width: 72mm;
+            margin: 0 auto;
+            padding: 2mm 1mm;
+            background: white;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .left {
+            text-align: left;
+        }
+        
+        .right {
+            text-align: right;
+        }
+        
+        .bold {
+            font-weight: 900;
+        }
+        
+        .large {
+            font-size: 16px;
+            font-weight: 900;
+        }
+        
+        .medium {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .small {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .line {
+            border-bottom: 1px solid #000;
+            margin: 2px 0;
+        }
+        
+        .double-line {
+            border-bottom: 2px solid #000;
+            margin: 3px 0;
+        }
+        
+        .dotted-line {
+            border-bottom: 1px dotted #000;
+            margin: 1px 0;
+        }
+        
+        .space-sm {
+            margin: 2px 0;
+        }
+        
+        .space-md {
+            margin: 4px 0;
+        }
+        
+        .space-lg {
+            margin: 6px 0;
+        }
+        
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1px 0;
+        }
+        
+        .amount-box {
+            background: transparent;
+            color: #000;
+            padding: 4px;
+            margin: 4px 0;
+            text-align: center;
+            border: 2px solid #000;
+        }
+        
+        .no-print {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .print-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 12px;
+        }
+        
+        .print-btn:hover {
+            background: #0056b3;
+        }
+        
+        .close-btn {
+            background: #6c757d;
+        }
+        
+        .close-btn:hover {
+            background: #545b62;
+        }
+        
+        .loading, .error {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+        
+        .error {
+            color: #d32f2f;
+        }
+        
+        /* طباعة حرارية */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                font-weight: bold;
+            }
+            
+            .receipt {
+                width: 70mm;
+                max-width: 70mm;
+                margin: 0 1mm;
+                padding: 1mm;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .amount-box {
+                background: transparent !important;
+                color: #000 !important;
+                border: 2px solid #000 !important;
+            }
+            
+            .line, .double-line, .dotted-line {
+                border-color: #000 !important;
+            }
+        }
+        
+        @page {
+            size: 80mm auto;
+            margin: 1mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="print-btn" onclick="window.print()">🖨️ طباعة</button>
+        <button class="print-btn close-btn" onclick="window.close()">❌ إغلاق</button>
+    </div>
+
+    <div id="loading" class="loading">
+        جاري تحميل بيانات الوصل...
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+        خطأ في تحميل بيانات الوصل
+    </div>
+
+    <div id="receipt" class="receipt" style="display: none;">
+        <!-- رأس الوصل -->
+        <div class="center space-sm">
+            <div class="bold large">وصول رقم</div>
+            <div class="small">خدمات التسويق الرقمي</div>
+            <div class="small bold">📞 0556767676</div>
+        </div>
+        
+        <div class="line"></div>
+        
+        <div class="center bold medium space-sm">وصل استلام</div>
+        
+        <div class="line"></div>
+        
+        <!-- تفاصيل العملية -->
+        <div class="space-sm">
+            <div class="row">
+                <span class="bold">رقم العملية:</span>
+                <span id="operationId">-</span>
+            </div>
+            <div class="dotted-line"></div>
+            
+            <div class="row">
+                <span class="bold">التاريخ:</span>
+                <span id="operationDate">-</span>
+            </div>
+            <div class="dotted-line"></div>
+            
+            <div class="row">
+                <span class="bold">العميل:</span>
+                <span id="customerName">-</span>
+            </div>
+            <div class="dotted-line"></div>
+            
+            <div class="row">
+                <span class="bold">الخدمة:</span>
+                <span id="serviceName">-</span>
+            </div>
+            <div class="dotted-line"></div>
+            
+            <div class="row">
+                <span class="bold">الصندوق:</span>
+                <span id="sourceBox">-</span>
+            </div>
+            <div class="dotted-line"></div>
+            
+            <div id="detailsSection" style="display: none;">
+                <div class="row">
+                    <span class="bold">الملاحظة:</span>
+                    <span id="operationDetails" class="small">-</span>
+                </div>
+                <div class="dotted-line"></div>
+            </div>
+        </div>
+        
+        <div class="line"></div>
+        
+        <!-- المبلغ -->
+        <div class="amount-box">
+            <div class="small">المبلغ المستلم</div>
+            <div class="bold medium">
+                <span id="amount">0.00</span> د.ج
+            </div>
+        </div>
+        
+        <div class="line"></div>
+        
+        <!-- الخاتمة -->
+        <div class="center space-sm">
+            <div class="bold small">شكراً لثقتكم بنا</div>
+            <div class="small">
+                <span id="printDate"></span>
+            </div>
+            <div class="small">
+                المستخدم: <span id="userInitials" class="bold">-</span>
+            </div>
+        </div>
+        
+        <div class="space-sm"></div>
+        
+        <!-- خط القطع -->
+        <div class="center small">
+            - - - - - - - - - - - - - - - -
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'api.php';
+        
+        // الحصول على رقم العملية من URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const operationId = urlParams.get('id');
+        
+        if (!operationId) {
+            showError('لم يتم تحديد رقم العملية');
+        } else {
+            loadOperationData(operationId);
+        }
+        
+        async function loadOperationData(id) {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'get_transaction_by_id', 
+                        id: id 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    displayReceipt(result.data);
+                } else {
+                    showError(result.message || 'العملية غير موجودة');
+                }
+                
+            } catch (error) {
+                console.error('Error loading operation data:', error);
+                showError('خطأ في تحميل بيانات العملية');
+            }
+        }
+        
+        function displayReceipt(data) {
+            // إخفاء شاشة التحميل
+            document.getElementById('loading').style.display = 'none';
+            
+            // عرض الوصل
+            document.getElementById('receipt').style.display = 'block';
+            
+            // ملء البيانات
+            document.getElementById('operationId').textContent = data['رقم العملية'] || '-';
+            document.getElementById('operationDate').textContent = formatDate(data['التاريخ']) || '-';
+            document.getElementById('customerName').textContent = data['إسم الزبون'] || '-';
+            document.getElementById('serviceName').textContent = data['الخدمة'] || '-';
+            document.getElementById('sourceBox').textContent = data['الصندوق'] || '-';
+            
+            // المبلغ
+            const amount = parseFloat(data['المبلغ']) || 0;
+            document.getElementById('amount').textContent = amount.toFixed(2);
+            
+            // التفاصيل (إذا وجدت)
+            const cleanDetails = sanitizeReceiptDetails(data['تفصيل'] || '');
+            if (cleanDetails) {
+                document.getElementById('operationDetails').textContent = cleanDetails;
+                document.getElementById('detailsSection').style.display = 'block';
+            } else {
+                document.getElementById('detailsSection').style.display = 'none';
+            }
+            
+            // الحرف الأول من الاسم واللقب للمستخدم
+            const editorName = data.editor_full_name || data['المحرر'] || '';
+            const userInitials = getUserInitials(editorName);
+            document.getElementById('userInitials').textContent = userInitials;
+            
+            // تاريخ الطباعة
+            document.getElementById('printDate').textContent = formatDateTime(new Date());
+            
+            // تحديث عنوان الصفحة
+            document.title = `وصل رقم ${data['رقم العملية']} - ${data['إسم الزبون']}`;
+        }
+        
+        function getUserInitials(fullName) {
+            if (!fullName || fullName.trim() === '') return '-';
+            
+            // Remove extra spaces and split by spaces
+            const names = fullName.trim().split(/\s+/).filter(name => name.length > 0);
+            
+            if (names.length === 0) {
+                return '-';
+            } else if (names.length === 1) {
+                return names[0].charAt(0).toUpperCase();
+            } else {
+                // Return first letter of first name and first letter of last name
+                return names[0].charAt(0).toUpperCase() + names[names.length - 1].charAt(0).toUpperCase();
+            }
+        }
+
+        function sanitizeReceiptDetails(detailsText) {
+            const text = String(detailsText || '').trim();
+            if (!text) return '';
+
+            // Hide internal tracking code from receipt in all cases.
+            return text
+                .replace(/\r?\n/g, ' | ')
+                .split('|')
+                .map(part => part.trim())
+                .filter(part => part && !part.includes('رمز متابعة'))
+                .join(' | ')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+        }
+        
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('ar-DZ', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        function formatDateTime(date) {
+            return date.toLocaleDateString('ar-DZ', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // طباعة تلقائية عند الحاجة
+        const autoPrint = urlParams.get('auto');
+        if (autoPrint === 'true') {
+            setTimeout(() => {
+                window.print();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

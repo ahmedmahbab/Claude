@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>برنامج متابعة الدفعات – Al Nour Elite</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #1E88E5; --secondary: #FFD700; --bg: #f4f7fa; --card-bg: #fff; --font-main: 'Tajawal', sans-serif; --radius: 8px; --spacing: 16px; --shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font-main); background: var(--bg); color: #333; }
+    header { background: var(--primary); color: #fff; padding: var(--spacing); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; box-shadow: var(--shadow); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand h1 { font-size: 2rem; margin: 0; }
+    .brand img { height: 60px; }
+    .container { max-width: 1200px; margin: var(--spacing) auto; padding: 0 var(--spacing); }
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--spacing); margin-bottom: var(--spacing); }
+    h2 { margin-top: 0; color: var(--primary); font-size: 1.4rem; border-bottom: 2px solid var(--primary); display: inline-block; padding-bottom: 4px; }
+    label { font-weight: 500; display: block; margin-bottom: 4px; }
+    input, select, textarea, button { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: var(--radius); margin-bottom: var(--spacing); font-size: 0.9rem; }
+    textarea { min-height: 80px; resize: vertical; }
+    button { background: var(--secondary); color: #000; border: none; border-radius: var(--radius); padding: 12px; font-weight: bold; cursor: pointer; transition: background .2s; }
+    button:hover { background: #e0b500; }
+    button:disabled { opacity: .65; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: var(--spacing); }
+    .col { flex: 1; min-width: 200px; }
+    .table-responsive { overflow-x: auto; margin-top: var(--spacing); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 0.95rem; }
+    th { background: var(--primary); color: #fff; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .editor-col, .total-row, #reportSection { display: none; }
+    .unpaid-row { background: #ffe6e6 !important; }
+    .alert { display: none; background: #ffcccc; color: #a00; padding: 8px; margin-bottom: 16px; border-radius: 4px; font-weight: bold; }
+    #monthlyUnpaidAlert { display: none; background: #fff3cd; color: #856404; padding: 10px; margin-bottom: 16px; border: 1px solid #ffeeba; border-radius: 4px; font-weight: bold; }
+    #loginModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    #loginModal .box { background: #fff; padding: 24px; border-radius: var(--radius); width: 90%; max-width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    #loginModal h2 { text-align: center; }
+    #loginError { color: #a00; font-weight: bold; margin-bottom: 12px; text-align: center; display: none; }
+    #mainContent { display: none; }
+    .user-info { color: white; font-weight: bold; }
+    #logoutBtn { background: var(--secondary); color: #000; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-weight: bold; }
+    
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: var(--radius); right: 0; }
+    .dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; text-align: right; }
+    .dropdown-content a:hover { background-color: #f1f1f1; }
+    .dropdown:hover .dropdown-content { display: block; }
+    .dropbtn { background-color: var(--primary); color: white; padding: 8px 12px; font-size: 16px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; margin-left: 16px; }
+    
+    @media(max-width: 768px) { .row { flex-direction: column; } }
+    .action-cell { display: flex; justify-content: center; align-items: center; gap: 15px; }
+    .edit-btn, .delete-btn, .print-btn { font-size: 1.2rem; border: none; background: none; cursor: pointer; padding: 0; margin: 0; width: auto; }
+    .delete-btn { display: none; }
+    .form-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
+    .form-actions button { width: auto; min-width: 150px; margin-bottom: 0; }
+    .btn-secondary { background: #e5e7eb; color: #111827; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .split-fields {
+      align-items: flex-end;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: var(--spacing);
+    }
+    .split-fields .col { min-width: 220px; }
+    .split-help {
+      display: block;
+      margin-top: -8px;
+      margin-bottom: var(--spacing);
+      color: #475569;
+      font-size: .88rem;
+    }
+    .table-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; color: #334155; font-weight: 600; }
+    .empty-row td { color: #64748b; font-style: italic; padding: 18px 8px; }
+    .toast-container {
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: min(92vw, 420px);
+    }
+    .toast {
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(15, 23, 42, 0.24);
+      animation: toastIn .2s ease-out;
+    }
+    .toast.info { background: #2563eb; }
+    .toast.success { background: #15803d; }
+    .toast.error { background: #b91c1c; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Autocomplete styles */
+    .autocomplete {
+      position: relative;
+      width: 100%;
+      margin-bottom: var(--spacing);
+    }
+    
+    .autocomplete input {
+      margin-bottom: 0;
+    }
+    
+    .autocomplete-items {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      border: 1px solid #d4d4d4;
+      border-top: none;
+      z-index: 999;
+      max-height: 200px;
+      overflow-y: auto;
+      background-color: #fff;
+      border-radius: 0 0 var(--radius) var(--radius);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .autocomplete-items div {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #d4d4d4;
+    }
+    
+    .autocomplete-empty {
+      color: #94a3b8;
+      font-style: italic;
+      cursor: default;
+    }
+    
+    .autocomplete-items div:hover {
+      background-color: #e9e9e9;
+    }
+    
+    .autocomplete-active {
+      background-color: #1E88E5 !important;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loginModal">
+    <div class="box">
+      <h2>تسجيل الدخول</h2>
+      <form id="loginForm">
+        <div id="loginError"></div>
+        <label>اسم المستخدم<input type="text" id="username" required></label>
+        <label>كلمة المرور<input type="password" id="password" required></label>
+        <button type="submit" id="loginSubmitBtn">دخول</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="mainContent">
+    <header>
+      <div class="brand">
+        <img src="logo.png" alt="شعار" style="height: 50px; border-radius: 50%;">
+        <h1>Al Nour Elite</h1>
+      </div>
+      <div class="user-info">
+        <span id="userInfo"></span> <a href="profile.html" style="color:white; margin:0 12px;">حسابي</a>
+        <div id="adminControls" class="dropdown" style="display: none;">
+            <button class="dropbtn">الإدارة ⚙️</button>
+            <div class="dropdown-content">
+                <a href="users.html">إدارة المستخدمين</a>
+            </div>
+        </div>
+        <button id="logoutBtn">تسجيل الخروج</button>
+      </div>
+    </header>
+    <div class="container">
+      <div id="monthlyUnpaidAlert" class="alert"></div>
+      <div class="card">
+        <h2>إدخال دفعة جديدة</h2>
+        <form id="paymentForm" data-mode="add">
+          <input type="hidden" id="recordId" name="id">
+          <div class="row">
+            <div class="col"><label>التاريخ<input type="date" name="date" required></label></div>
+            <div class="col">
+              <label for="customerInput">إسم الزبون</label>
+              <div class="autocomplete">
+                <input type="text" id="customerInput" name="customer" required autocomplete="off" placeholder="ابدأ كتابة الاسم">
+              </div>
+            </div>
+            <div class="col"><label>الخدمة<select id="service" name="service" required></select></label></div>
+            <div class="col"><label>الصندوق<select id="source" name="source" required></select></label></div>
+            <div class="col"><label>الحالة<select id="status" name="status" required></select></label></div>
+            <div class="col">
+              <label id="amountLabel" for="amountInput">المبلغ</label>
+              <input id="amountInput" type="number" name="amount" step="0.01" required>
+            </div>
+          </div>
+          <div class="row split-fields" id="projectOptions" style="display: none;">
+            <div class="col">
+              <label>طريقة الدفع
+                <select id="paymentMode" name="payment_mode">
+                  <option value="first">الشطر الأول</option>
+                  <option value="second">الشطر الثاني</option>
+                  <option value="full" selected>المبلغ كاملا</option>
+                </select>
+              </label>
+            </div>
+            <div class="col" id="installmentTotalLabel">
+              <label>المبلغ الإجمالي للمشروع
+                <input type="number" id="installmentTotalAmount" name="total_amount" step="0.01">
+              </label>
+            </div>
+            <div class="col" id="installmentCodeLabel" style="display: none;">
+              <label>رمز متابعة الشطر الأول
+                <input type="text" id="installmentGroupId" name="installment_group_id" placeholder="مثال: proj_67abf2...">
+              </label>
+            </div>
+            <div class="col" id="remainingAmountLabel" style="display: none;">
+              <label>مبلغ الشطر الثاني (تلقائي)
+                <input type="number" id="remainingAmount" step="0.01" readonly>
+              </label>
+            </div>
+          </div>
+          <small id="splitHelpText" class="split-help" style="display: none;">عند حفظ الشطر الأول سيظهر لك رمز متابعة، استعمله عند تسجيل الشطر الثاني.</small>
+          <div id="editProjectTotalRow" style="display: none;"></div>
+          <div class="row"><div class="col"><label>تفاصيل<textarea name="details"></textarea></label></div></div>
+          <div class="row">
+            <div class="col"></div>
+            <div class="col">
+              <div class="form-actions">
+                <button type="button" id="cancelEditBtn" class="btn-secondary" style="display: none;">إلغاء التعديل</button>
+                <button type="button" id="editLastRecordBtn" class="btn-secondary" style="display: none;">تعديل آخر تسجيل</button>
+                <button type="submit" id="saveRecordBtn">أضف دفعة</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>بحث وفلترة</h2>
+        <form id="filterForm">
+          <div class="row">
+            <div class="col"><label>رقم العملية<input type="text" id="searchId" placeholder="رقم العملية"></label></div>
+            <div class="col"><label>رمز المتابعة<input type="text" id="filterProjectId" placeholder="مثال: proj_67abf2..."></label></div>
+            <div class="col"><label>من تاريخ<input type="date" id="fromDate"></label></div>
+            <div class="col"><label>إلى تاريخ<input type="date" id="toDate"></label></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>الصندوق<select id="filterSource"></select></label></div>
+            <div class="col"><label>الخدمة<select id="filterService"></select></label></div>
+            <div class="col"><label>الحالة<select id="filterStatus"></select></label></div>
+            <div class="col">
+              <label for="filterCustomer">إسم الزبون</label>
+              <div class="autocomplete">
+                <input type="text" id="filterCustomer" placeholder="بحث بالاسم" autocomplete="off">
+              </div>
+            </div>
+          </div>
+          <div class="row editor-filter" style="display: none;"><div class="col"><label>المحرر<select id="filterEditor"><option value="">الكل</option></select></label></div></div>
+          <div class="row">
+            <div class="col"></div>
+            <div class="col">
+              <div class="form-actions">
+                <button type="button" id="btnResetFilters" class="btn-secondary">مسح الفلاتر</button>
+                <button type="button" id="btnSearch">بحث</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>سجل دفعات اليوم</h2>
+        <div class="total-row"><div class="total">المجموع: <span id="totalAmount">0.00</span> د.ج</div></div>
+        <div class="table-meta">
+          <span id="recordCount">العمليات: 0</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr><th>رقم العملية</th><th>تاريخ</th><th>إسم الزبون</th><th>مبلغ</th><th>الصندوق</th><th>خدمة</th><th>تفاصيل</th><th>حالة</th><th class="editor-col">محرر</th><th>الإجراءات</th></tr>
+            </thead>
+            <tbody id="recordsTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="reportSection" class="card">
+        <h2>تقرير الدفعات للفترة</h2>
+        <div class="row">
+          <div class="col"><label>من<input type="date" id="startDate"></label></div>
+          <div class="col"><label>إلى<input type="date" id="endDate"></label></div>
+        </div>
+        <div class="row"><div class="col"></div><div class="col"><button id="btnReport">عرض تقرير</button></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <script>
+    (function() {
+      const apiUrl = 'api.php';
+      const LAST_OPERATION_STORAGE_KEY = 'last_saved_operation_id';
+      let currentUser = null;
+
+      function escapeHtml(value) {
+        const str = String(value ?? '');
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return str.replace(/[&<>"']/g, (ch) => map[ch]);
+      }
+
+      function showLoginModalWithMessage(message) {
+        currentUser = null;
+
+        const loginModal = document.getElementById('loginModal');
+        const mainContent = document.getElementById('mainContent');
+        const loginError = document.getElementById('loginError');
+
+        if (mainContent) {
+          mainContent.style.display = 'none';
+        }
+        if (loginModal) {
+          loginModal.style.display = 'flex';
+        }
+        if (loginError) {
+          loginError.textContent = message || 'انتهت الجلسة. يرجى تسجيل الدخول من جديد.';
+          loginError.style.display = 'block';
+        }
+      }
+
+      function showToast(message, type = 'info', duration = 3500) {
+        const container = document.getElementById('toastContainer');
+        if (!container || !message) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(8px)';
+          setTimeout(() => toast.remove(), 180);
+        }, duration);
+      }
+
+      function setButtonLoading(button, loading, loadingText) {
+        if (!button) return;
+        if (!button.dataset.defaultText) {
+          button.dataset.defaultText = button.textContent;
+        }
+        button.disabled = !!loading;
+        button.textContent = loading ? loadingText : button.dataset.defaultText;
+      }
+
+      function getLastSavedOperationId() {
+        return localStorage.getItem(LAST_OPERATION_STORAGE_KEY) || '';
+      }
+
+      function rememberLastSavedOperation(operationId) {
+        if (!operationId) return;
+        localStorage.setItem(LAST_OPERATION_STORAGE_KEY, operationId);
+        updateEditLastRecordButtonVisibility();
+      }
+
+      function updateEditLastRecordButtonVisibility() {
+        const btn = document.getElementById('editLastRecordBtn');
+        if (!btn) return;
+        btn.style.display = getLastSavedOperationId() ? 'inline-block' : 'none';
+      }
+
+      function setPaymentFormMode(mode) {
+        const form = document.getElementById('paymentForm');
+        if (!form) return;
+
+        const normalizedMode = mode === 'edit' ? 'edit' : 'add';
+        form.dataset.mode = normalizedMode;
+
+        const submitBtn = document.getElementById('saveRecordBtn') || form.querySelector('button[type=\"submit\"]');
+        if (submitBtn) {
+          submitBtn.dataset.defaultText = normalizedMode === 'edit' ? 'تحديث دفعة' : 'أضف دفعة';
+          submitBtn.textContent = submitBtn.dataset.defaultText;
+        }
+
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        if (cancelEditBtn) {
+          cancelEditBtn.style.display = normalizedMode === 'edit' ? 'inline-block' : 'none';
+        }
+      }
+
+      async function editLastSavedRecord() {
+        const operationId = getLastSavedOperationId();
+        if (!operationId) {
+          showToast('لا يوجد تسجيل محفوظ للتعديل.', 'error');
+          updateEditLastRecordButtonVisibility();
+          return;
+        }
+
+        const result = await apiCall('get_transaction_by_id', { id: operationId });
+        fillForm(result);
+      }
+
+      async function apiCall(action, params = {}, method = 'POST') {
+          console.log("API call started:", { action, params });
+          const options = {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action, ...params })
+          };
+          try {
+              const response = await fetch(apiUrl, options);
+              console.log("API response received:", response);
+              if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error("----------- SERVER ERROR -----------");
+                  console.error(errorText);
+                  console.error("------------------------------------");
+                  throw new Error(`HTTP error! status: ${response.status}. Server says: ${errorText}`);
+              }
+              const text = await response.text();
+              console.log("API response text:", text);
+              try {
+                  const parsed = JSON.parse(text);
+                  if (parsed && parsed.auth_required) {
+                      showLoginModalWithMessage(parsed.message);
+                  }
+                  return parsed;
+              } catch (e) {
+                  console.error("Failed to parse JSON. Server response:", text);
+                  throw new Error(`Failed to parse JSON. Server response: ${text}`);
+              }
+          } catch (error) {
+              console.error('API Call Error:', error);
+              showToast('حدث خطأ أثناء الاتصال بالخادم.', 'error');
+              return null;
+          }
+      }
+      
+      document.addEventListener('DOMContentLoaded', init);
+
+      async function init() {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('loginError');
+
+            const result = await apiCall('login', { username, password });
+
+            if (result && result.success) {
+                currentUser = result.user;
+                loginError.style.display = 'none';
+                loginError.textContent = '';
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                startApp();
+            } else {
+                loginError.textContent = result ? result.message : 'فشل تسجيل الدخول.';
+                loginError.style.display = 'block';
+            }
+        });
+
+        const session = await apiCall('check_session');
+        if (session && session.success) {
+            currentUser = session.user;
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            startApp();
+        } else {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('mainContent').style.display = 'none';
+        }
+      }
+
+      function updateCurrentDate() {
+        const today = new Date().toISOString().slice(0,10);
+        
+        // تحديث تاريخ العملية الجديدة
+        const paymentDateInput = document.querySelector('#paymentForm input[name="date"]');
+        if (paymentDateInput && !paymentDateInput.value) {
+          paymentDateInput.value = today;
+        }
+        
+        // تحديث تواريخ الفلترة
+        const fromDateInput = document.getElementById('fromDate');
+        const toDateInput = document.getElementById('toDate');
+        if (fromDateInput && !fromDateInput.value) {
+          fromDateInput.value = today;
+        }
+        if (toDateInput && !toDateInput.value) {
+          toDateInput.value = today;
+        }
+        
+        // تحديث تواريخ التقرير
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        if (startDateInput && !startDateInput.value) {
+          startDateInput.value = today;
+        }
+        if (endDateInput && !endDateInput.value) {
+          endDateInput.value = today;
+        }
+      }
+
+      function supportsSplitPayments(serviceName) {
+        return serviceName && serviceName !== 'ADS META';
+      }
+
+      function setSecondInstallmentLockState(locked) {
+        const form = document.getElementById('paymentForm');
+        if (!form) return;
+
+        if (form.customer) form.customer.readOnly = !!locked;
+        if (form.amount) form.amount.readOnly = !!locked;
+
+        const serviceSelect = document.getElementById('service');
+        if (serviceSelect) serviceSelect.disabled = !!locked;
+
+        const totalInput = document.getElementById('installmentTotalAmount');
+        if (totalInput) totalInput.readOnly = !!locked;
+      }
+
+      function resetInstallmentAutoData() {
+        const remainingInput = document.getElementById('remainingAmount');
+        const totalInput = document.getElementById('installmentTotalAmount');
+        if (remainingInput) remainingInput.value = '';
+        if (totalInput) totalInput.value = '';
+        setSecondInstallmentLockState(false);
+      }
+
+      function syncFullPaymentAmount() {
+        const form = document.getElementById('paymentForm');
+        const paymentMode = document.getElementById('paymentMode');
+        const totalInput = document.getElementById('installmentTotalAmount');
+        const serviceSelect = document.getElementById('service');
+
+        if (!form || !form.amount || !paymentMode || !totalInput) {
+          return;
+        }
+
+        const splitService = supportsSplitPayments(serviceSelect ? serviceSelect.value : '');
+
+        if (!splitService) {
+          form.amount.readOnly = false;
+          return;
+        }
+
+        if (paymentMode.value === 'full') {
+          const totalAmountValue = parseFloat(totalInput.value || 0);
+          form.amount.value = totalAmountValue > 0 ? totalAmountValue.toFixed(2) : '';
+          form.amount.readOnly = true;
+          return;
+        }
+
+        if (paymentMode.value === 'second') {
+          form.amount.readOnly = !!(serviceSelect && serviceSelect.disabled);
+          return;
+        }
+
+        form.amount.readOnly = false;
+      }
+
+      function updatePaymentModeUI() {
+        const paymentMode = document.getElementById('paymentMode');
+        const installmentCodeLabel = document.getElementById('installmentCodeLabel');
+        const remainingAmountLabel = document.getElementById('remainingAmountLabel');
+        const installmentGroupInput = document.getElementById('installmentGroupId');
+        const totalLabel = document.getElementById('installmentTotalLabel');
+        const totalInput = document.getElementById('installmentTotalAmount');
+        const splitHelpText = document.getElementById('splitHelpText');
+        const showProjectOptions = supportsSplitPayments((document.getElementById('service') || {}).value);
+
+        if (!paymentMode || !installmentCodeLabel) return;
+
+        const showCode = paymentMode.value === 'second';
+        installmentCodeLabel.style.display = showCode ? 'block' : 'none';
+        if (remainingAmountLabel) remainingAmountLabel.style.display = showCode ? 'block' : 'none';
+        if (totalLabel) totalLabel.style.display = showCode ? 'none' : 'block';
+        if (totalInput) totalInput.required = showProjectOptions && !showCode;
+        if (splitHelpText) splitHelpText.style.display = showProjectOptions ? 'block' : 'none';
+
+        if (installmentGroupInput) {
+          installmentGroupInput.required = showProjectOptions && showCode;
+        }
+
+        if (!showCode) {
+          if (installmentGroupInput) installmentGroupInput.value = '';
+          const remainingInput = document.getElementById('remainingAmount');
+          if (remainingInput) remainingInput.value = '';
+          setSecondInstallmentLockState(false);
+        }
+
+        syncFullPaymentAmount();
+      }
+
+      function updateServicePaymentUI() {
+        const serviceSelect = document.getElementById('service');
+        const projectOptions = document.getElementById('projectOptions');
+        const amountLabel = document.getElementById('amountLabel');
+        const paymentMode = document.getElementById('paymentMode');
+        const totalInput = document.getElementById('installmentTotalAmount');
+        const installmentGroupInput = document.getElementById('installmentGroupId');
+        const remainingInput = document.getElementById('remainingAmount');
+        const splitHelpText = document.getElementById('splitHelpText');
+
+        if (!serviceSelect || !projectOptions || !amountLabel) return;
+
+        const isRefund = ((document.getElementById('status') || {}).value === 'استرجاع');
+
+        if (supportsSplitPayments(serviceSelect.value) && !isRefund) {
+          projectOptions.style.display = 'flex';
+          amountLabel.textContent = 'المبلغ';
+          if (paymentMode && !paymentMode.value) {
+            paymentMode.value = 'full';
+          }
+          if (totalInput) totalInput.required = true;
+          if (splitHelpText) splitHelpText.style.display = 'block';
+          updatePaymentModeUI();
+        } else {
+          projectOptions.style.display = 'none';
+          if (splitHelpText) splitHelpText.style.display = 'none';
+          amountLabel.textContent = 'المبلغ';
+          if (paymentMode) paymentMode.value = 'full';
+          if (totalInput) {
+            totalInput.value = '';
+            totalInput.required = false;
+          }
+          if (installmentGroupInput) installmentGroupInput.value = '';
+          if (remainingInput) remainingInput.value = '';
+          setSecondInstallmentLockState(false);
+          const form = document.getElementById('paymentForm');
+          if (form && form.amount) {
+            form.amount.readOnly = false;
+          }
+        }
+      }
+
+      async function loadSecondInstallmentInfo() {
+        const form = document.getElementById('paymentForm');
+        const serviceSelect = document.getElementById('service');
+        const paymentMode = document.getElementById('paymentMode');
+        const installmentGroupInput = document.getElementById('installmentGroupId');
+        const totalInput = document.getElementById('installmentTotalAmount');
+        const remainingInput = document.getElementById('remainingAmount');
+
+        if (!form || !serviceSelect || !paymentMode || !installmentGroupInput || !totalInput || !remainingInput) {
+          return;
+        }
+
+        if (!supportsSplitPayments(serviceSelect.value) || paymentMode.value !== 'second') {
+          return;
+        }
+
+        const code = installmentGroupInput.value.trim();
+        if (!code) {
+          resetInstallmentAutoData();
+          return;
+        }
+
+        const info = await apiCall('get_installment_info', { installment_group_id: code });
+        if (!info || !info.success) {
+          resetInstallmentAutoData();
+          showToast((info && info.message) ? info.message : 'رمز المتابعة غير صالح', 'error');
+          return;
+        }
+
+        form.customer.value = info.customer || '';
+        serviceSelect.value = info.service || '';
+        totalInput.value = Number(info.total_amount || 0).toFixed(2);
+        remainingInput.value = Number(info.remaining_amount || 0).toFixed(2);
+        form.amount.value = Number(info.remaining_amount || 0).toFixed(2);
+
+        setSecondInstallmentLockState(true);
+        if (info.second_exists) {
+          showToast('هذا الرمز مسجل له الشطر الثاني مسبقًا.', 'error');
+          return;
+        }
+
+        if (Number(info.remaining_amount || 0) <= 0) {
+          showToast('لا يوجد مبلغ متبقي لهذا الكود.', 'error');
+          return;
+        }
+
+        showToast(`تم جلب بيانات الشطر الثاني. المتبقي: ${remainingInput.value}`, 'info');
+      }
+
+      async function startApp() {
+        document.getElementById('userInfo').textContent = `مرحباً, ${currentUser.full_name || currentUser.username} (${currentUser.role})`;
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await apiCall('logout');
+            location.reload();
+        });
+
+        // تحديث التواريخ تلقائياً
+        updateCurrentDate();
+        
+        // تحديث التواريخ كل دقيقة (في حالة تغيير اليوم)
+        setInterval(updateCurrentDate, 60000);
+        
+        const sources = ['CAISSE', 'CCP AM', 'CCP IM', 'E-PAYMENT'];
+        const services = ['ADS META', 'CREATION VIDEOS', 'DEVELOPMENT', 'GRAPHIC DESIGN', 'Al Nour Site', 'Al Nour NFC', 'Pack marketing', 'Gestion de page'];
+        const statuses = ['دفع', 'لم يدفع', 'استرجاع'];
+
+        fill('source', sources, false);
+        fill('filterSource', sources, true);
+        fill('service', services, false);
+        fill('filterService', services, true);
+        fill('status', statuses, false);
+        fill('filterStatus', statuses, true);
+
+        const serviceSelect = document.getElementById('service');
+        if (serviceSelect) {
+            serviceSelect.addEventListener('change', updateServicePaymentUI);
+        }
+        const statusSelect = document.getElementById('status');
+        if (statusSelect) {
+            // الاسترجاع لا يقبل الدفع بالأشطر، لذلك نُخفي خيارات المشروع عند اختياره.
+            statusSelect.addEventListener('change', updateServicePaymentUI);
+        }
+        const paymentModeSelect = document.getElementById('paymentMode');
+        if (paymentModeSelect) {
+            paymentModeSelect.addEventListener('change', updatePaymentModeUI);
+        }
+        const totalAmountInput = document.getElementById('installmentTotalAmount');
+        if (totalAmountInput) {
+            totalAmountInput.addEventListener('input', syncFullPaymentAmount);
+            totalAmountInput.addEventListener('change', syncFullPaymentAmount);
+        }
+        const installmentGroupInput = document.getElementById('installmentGroupId');
+        if (installmentGroupInput) {
+            installmentGroupInput.addEventListener('change', loadSecondInstallmentInfo);
+            installmentGroupInput.addEventListener('blur', loadSecondInstallmentInfo);
+        }
+        updateServicePaymentUI();
+
+        document.getElementById('paymentForm').addEventListener('submit', handleSub);
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', () => {
+                const form = document.getElementById('paymentForm');
+                if (!form) return;
+                form.reset();
+                showToast('تم إلغاء وضع التعديل.', 'info');
+            });
+        }
+        const editLastRecordBtn = document.getElementById('editLastRecordBtn');
+        if (editLastRecordBtn) {
+            editLastRecordBtn.addEventListener('click', editLastSavedRecord);
+        }
+        document.getElementById('btnSearch').addEventListener('click', loadFiltered);
+        const resetBtn = document.getElementById('btnResetFilters');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', resetFilters);
+        }
+
+        // Wrap reset once to clear readonly state and UI remnants from edit/installment flows.
+        const paymentForm = document.getElementById('paymentForm');
+        if (paymentForm && !paymentForm._resetWrapped) {
+            const originalReset = paymentForm.reset.bind(paymentForm);
+            paymentForm.reset = function() {
+                originalReset();
+
+                const editProjectTotalRow = document.getElementById('editProjectTotalRow');
+                if (editProjectTotalRow) editProjectTotalRow.style.display = 'none';
+
+                const amountLabel = document.getElementById('amountLabel');
+                if (amountLabel) amountLabel.textContent = 'المبلغ';
+                if (paymentForm.payment_mode) paymentForm.payment_mode.value = 'full';
+                if (paymentForm.installment_group_id) paymentForm.installment_group_id.value = '';
+                if (paymentForm.total_amount) paymentForm.total_amount.value = '';
+                setPaymentFormMode('add');
+
+                setSecondInstallmentLockState(false);
+                updateCurrentDate();
+                updateServicePaymentUI();
+            };
+            paymentForm._resetWrapped = true;
+        }
+
+        setPaymentFormMode('add');
+        updateEditLastRecordButtonVisibility();
+        
+        document.getElementById('btnReport').addEventListener('click', function() {
+          const s = document.getElementById('startDate').value;
+          const e = document.getElementById('endDate').value;
+          if (!s||!e) {
+            showToast('يرجى تحديد الفترة كاملة', 'error');
+            return;
+          }
+          if (s>e) {
+            showToast('تاريخ البداية أكبر من النهاية', 'error');
+            return;
+          }
+          window.open(`report.html?from=${encodeURIComponent(s)}&to=${encodeURIComponent(e)}`, '_blank');
+        });
+
+        loadFiltered();
+        checkMonthlyUnpaid();
+        adjustUserPrivileges();
+        checkAndLoadEditTransaction();
+        checkAndLoadProjectFilter();
+        initAutocomplete(); // Initialize autocomplete functionality
+      }
+
+      function checkAndLoadProjectFilter() {
+        const projectId = localStorage.getItem('filterByProjectId');
+        if (projectId) {
+            localStorage.removeItem('filterByProjectId');
+            document.getElementById('filterProjectId').value = projectId;
+            loadFiltered();
+        }
+      }
+
+      function checkAndLoadEditTransaction() {
+        const transactionId = localStorage.getItem('editTransactionId');
+        if (transactionId) {
+            localStorage.removeItem('editTransactionId');
+            apiCall('get_transaction_by_id', { id: transactionId }).then(fillForm);
+        }
+      }
+
+      function adjustUserPrivileges() {
+        if (!currentUser) return;
+        const isAdmin = (currentUser.role === 'admin');
+        document.querySelector('.total-row').style.display = 'block';
+        document.querySelectorAll('.editor-col, .editor-filter, #reportSection').forEach(el => {
+            el.style.display = isAdmin ? (el.tagName === 'TH' || el.tagName === 'TD' || el.tagName === 'OPTION' ? 'table-cell' : 'block') : 'none';
+        });
+        document.getElementById('adminControls').style.display = isAdmin ? 'inline-block' : 'none';
+        if (isAdmin) {
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'inline-block');
+            // Load editors list for the filter
+            loadEditorsList();
+        }
+      }
+
+      function checkMonthlyUnpaid() {
+        apiCall('get_unpaid_count').then(data => {
+            const a = document.getElementById('monthlyUnpaidAlert');
+            if (data && data.count > 0) {
+                a.textContent = `🔔 يوجد ${data.count} عملية غير مدفوعة هذا الشهر!`;
+                a.style.display = 'block';
+            } else {
+                a.style.display = 'none';
+            }
+        });
+      }
+
+      function fill(id, items, all) {
+        const sel = document.getElementById(id);
+        sel.innerHTML = all ? '<option value="">الكل</option>' : '';
+        items.forEach(v => sel.insertAdjacentHTML('beforeend', `<option value="${v}">${v}</option>`));
+      }
+
+      function resetFilters() {
+        const admin = currentUser && currentUser.role === 'admin';
+        document.getElementById('searchId').value = '';
+        document.getElementById('filterProjectId').value = '';
+        document.getElementById('filterSource').value = '';
+        document.getElementById('filterService').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterCustomer').value = '';
+
+        updateCurrentDate();
+
+        if (admin) {
+            document.getElementById('filterEditor').value = '';
+        }
+
+        loadFiltered();
+      }
+
+      async function handleSub(e) {
+        e.preventDefault();
+        if (!currentUser) {
+            showLoginModalWithMessage('انتهت الجلسة. يرجى تسجيل الدخول من جديد.');
+            return;
+        }
+        const f = e.target;
+        const submitBtn = document.getElementById('saveRecordBtn') || f.querySelector('button[type="submit"]');
+        const initialMode = f.dataset.mode === 'edit' ? 'edit' : 'add';
+        if (submitBtn) {
+            submitBtn.dataset.defaultText = initialMode === 'edit' ? 'تحديث دفعة' : 'أضف دفعة';
+            setButtonLoading(submitBtn, true, initialMode === 'edit' ? 'جاري التحديث...' : 'جاري الحفظ...');
+        }
+
+        const isAddMode = f.dataset.mode !== 'edit';
+        const isRefund = (f.status.value === 'استرجاع');
+        // الاسترجاع عملية بسيطة (تخرج أموال) ولا تمر بمنطق الأشطر.
+        const splitService = supportsSplitPayments(f.service.value) && !isRefund;
+        const paymentMode = (splitService && f.payment_mode) ? f.payment_mode.value : 'full';
+        const installmentGroupId = (f.installment_group_id && f.installment_group_id.value) ? f.installment_group_id.value.trim() : '';
+        const totalAmount = parseFloat(f.total_amount ? f.total_amount.value : 0);
+        const amountValue = parseFloat(f.amount.value || 0);
+        const remainingAmountValue = parseFloat((document.getElementById('remainingAmount') || {}).value || 0);
+
+        try {
+            if (isRefund && !f.details.value.trim()) {
+                showToast('يرجى ذكر سبب الاسترجاع في خانة التفاصيل.', 'error');
+                return;
+            }
+
+            let data = {
+                id: document.getElementById('recordId').value,
+                date: f.date.value, customer: f.customer.value, amount: f.amount.value,
+                source: f.source.value, service: f.service.value, details: f.details.value,
+                status: f.status.value,
+                transactionType: 'بيع',
+                is_installment: false,
+                installment_part: 'full',
+                total_amount: 0,
+                installment_group_id: ''
+            };
+
+            // Payment workflow (except ADS META):
+            // - first installment: creates a tracking code
+            // - second installment: reuses tracking code
+            // - full amount: stores full payment directly
+            if (isAddMode && splitService) {
+                data.is_installment = true;
+                data.installment_part = paymentMode;
+                data.total_amount = totalAmount;
+
+                if (paymentMode === 'first') {
+                    if (!totalAmount || totalAmount <= 0) {
+                        showToast('يرجى إدخال المبلغ الإجمالي للمشروع.', 'error');
+                        return;
+                    }
+                    if (!amountValue || amountValue <= 0 || amountValue >= totalAmount) {
+                        showToast('الشطر الأول يجب أن يكون أكبر من 0 وأقل من المبلغ الإجمالي.', 'error');
+                        return;
+                    }
+                } else if (paymentMode === 'second') {
+                    if (!installmentGroupId) {
+                        showToast('رمز متابعة الشطر الأول مطلوب عند اختيار الشطر الثاني.', 'error');
+                        return;
+                    }
+                    data.installment_group_id = installmentGroupId;
+                    if (!totalAmount || totalAmount <= 0) {
+                        showToast('أدخل رمز متابعة صحيح لتحميل بيانات الشطر الثاني.', 'error');
+                        return;
+                    }
+                    if (!amountValue || amountValue <= 0) {
+                        showToast('تعذر تحديد مبلغ الشطر الثاني من رمز المتابعة.', 'error');
+                        return;
+                    }
+                    if (remainingAmountValue > 0 && Math.abs(amountValue - remainingAmountValue) > 0.01) {
+                        showToast('مبلغ الشطر الثاني يجب أن يساوي المبلغ المتبقي.', 'error');
+                        return;
+                    }
+                } else if (paymentMode === 'full') {
+                    if (!totalAmount || totalAmount <= 0) {
+                        showToast('يرجى إدخال المبلغ الإجمالي للمشروع.', 'error');
+                        return;
+                    }
+                    data.amount = Number(totalAmount).toFixed(2);
+                    f.amount.value = data.amount;
+                } else {
+                    showToast('طريقة الدفع غير صالحة.', 'error');
+                    return;
+                }
+            }
+
+            const action = f.dataset.mode === 'edit' ? 'update_record' : 'add_record';
+            const result = await apiCall(action, data);
+
+            if (result && result.success) {
+                f.reset();
+                updateCurrentDate();
+                setPaymentFormMode('add');
+                if (isAddMode && result.operation_id) {
+                    rememberLastSavedOperation(result.operation_id);
+                }
+                if (isAddMode && data.is_installment && data.installment_part === 'first' && result.project_id) {
+                    showToast(`تم حفظ الشطر الأول. رمز المتابعة: ${result.project_id}`, 'success', 7000);
+                } else {
+                    showToast(result.message || 'تم حفظ العملية بنجاح', 'success');
+                }
+                await loadFiltered();
+                checkMonthlyUnpaid();
+            } else {
+                if (result && result.auth_required) {
+                    // apiCall() already forced re-login modal.
+                    return;
+                }
+                showToast((result && result.message) ? result.message : 'فشل تنفيذ العملية.', 'error');
+            }
+        } finally {
+            setButtonLoading(submitBtn, false);
+        }
+      }
+
+      async function loadEditorsList() {
+        // Get list of all users (editors) for the filter dropdown
+        const result = await apiCall('get_users');
+        if (result && result.success) {
+            const editorSelect = document.getElementById('filterEditor');
+            // Clear existing options except the first "All" option
+            editorSelect.innerHTML = '<option value="">الكل</option>';
+            // Add each user as an option
+            result.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.username;
+                option.textContent = user.full_name + ' (' + user.username + ')';
+                editorSelect.appendChild(option);
+            });
+        }
+      }
+
+      async function loadFiltered() {
+        if (!currentUser) return;
+        const searchBtn = document.getElementById('btnSearch');
+        setButtonLoading(searchBtn, true, 'جاري البحث...');
+        const admin = currentUser.role === 'admin';
+        const crit = {
+            id: document.getElementById('searchId').value,
+            project_id: document.getElementById('filterProjectId').value,
+            fromDate: document.getElementById('fromDate').value,
+            toDate: document.getElementById('toDate').value,
+            source: document.getElementById('filterSource').value,
+            service: document.getElementById('filterService').value,
+            status: document.getElementById('filterStatus').value,
+            customer: document.getElementById('filterCustomer').value,
+            transactionType: 'بيع',
+            editor: admin ? document.getElementById('filterEditor').value : ''
+        };
+        try {
+            const records = await apiCall('filter_records', crit);
+            render(records);
+        } finally {
+            setButtonLoading(searchBtn, false);
+        }
+      }
+
+      function render(records) {
+        const tableBody = document.getElementById('recordsTable');
+        const countLabel = document.getElementById('recordCount');
+
+        if (!records) {
+          tableBody.innerHTML = '<tr class="empty-row"><td colspan="10">لا توجد نتائج.</td></tr>';
+          if (countLabel) countLabel.textContent = 'العمليات: 0';
+          document.getElementById('totalAmount').textContent = '0.00';
+          return;
+        }
+
+        if (!Array.isArray(records)) {
+          if (records && records.message && !records.auth_required) {
+            showToast(records.message, 'error');
+          }
+          return;
+        }
+
+        let sum = 0;
+        const display = records.filter(r => r['العملية'] === 'بيع' || !r['العملية']);
+        
+        const rows = display.map(r => {
+            const opId = escapeHtml(r['رقم العملية']);
+            const date = escapeHtml(r['التاريخ']);
+            const customer = escapeHtml(r['إسم الزبون']);
+            const source = escapeHtml(r['الصندوق']);
+            const service = escapeHtml(r['الخدمة']);
+            const details = escapeHtml(r['تفصيل'] || '');
+            const status = escapeHtml(r['حالة الدفع']);
+
+            const amt = parseFloat(r['المبلغ']) || 0;
+            if (r['حالة الدفع'] !== 'لم يدفع') {
+                sum += amt;
+            }
+
+            const editorName = escapeHtml(r.editor_full_name || r['المحرر'] || '');
+            const editBtn = `<button class="edit-btn" data-id="${opId}" title="تعديل">✏️</button>`;
+            const deleteBtn = `<button class="delete-btn" data-id="${opId}" title="حذف">🗑️</button>`;
+            const printBtn = `<button class="print-btn" data-id="${opId}" title="طباعة">🖨️</button>`;
+
+            return `<tr class="${r['حالة الدفع'] === 'لم يدفع' ? 'unpaid-row' : ''}">
+                        <td>${opId}</td>
+                        <td>${date}</td>
+                        <td>${customer}</td>
+                        <td>${amt.toFixed(2)}</td>
+                        <td>${source}</td>
+                        <td>${service}</td>
+                        <td>${details}</td>
+                        <td>${status}</td>
+                        <td class="editor-col">${editorName}</td>
+                        <td><div class="action-cell">${printBtn}${editBtn}${deleteBtn}</div></td>
+                    </tr>`;
+        }).join('');
+
+        tableBody.innerHTML = rows || '<tr class="empty-row"><td colspan="10">لا توجد نتائج مطابقة للفلترة الحالية.</td></tr>';
+        adjustUserPrivileges();
+        document.getElementById('totalAmount').textContent = sum.toFixed(2);
+        if (countLabel) {
+            countLabel.textContent = `العمليات: ${display.length}`;
+        }
+        
+        tableBody.querySelectorAll('.edit-btn').forEach(b => b.onclick = () => apiCall('get_transaction_by_id', { id: b.dataset.id }).then(fillForm));
+        tableBody.querySelectorAll('.print-btn').forEach(b => b.onclick = () => window.open(`print_thermal.html?id=${encodeURIComponent(b.dataset.id)}`, '_blank'));
+        tableBody.querySelectorAll('.delete-btn').forEach(b => b.onclick = async function() {
+            if (confirm(`هل أنت متأكد من حذف ${this.dataset.id}?`)) {
+                const result = await apiCall('delete_record', { id: this.dataset.id });
+                if (result && result.success) {
+                    loadFiltered();
+                    checkMonthlyUnpaid();
+                } else if (result) {
+                    showToast(result.message || 'فشل حذف السجل.', 'error');
+                }
+            }
+        });
+      }
+
+      function fillForm(result) {
+        if (!result || !result.success) {
+          showToast(result ? result.message : 'فشل جلب البيانات.', 'error');
+          return;
+        }
+        const r = result.data;
+        const f = document.getElementById('paymentForm');
+        setPaymentFormMode('edit');
+        document.getElementById('recordId').value = r['رقم العملية'];
+        f.date.value = r['التاريخ'];
+        f.customer.value = r['إسم الزبون'];
+        // المبلغ يُخزَّن بالسالب في حالة الاسترجاع، لكن نعرضه موجباً في الخانة.
+        f.amount.value = Math.abs(parseFloat(r['المبلغ']) || 0).toFixed(2);
+        f.source.value = r['الصندوق'];
+        f.service.value = r['الخدمة'];
+        f.status.value = r['حالة الدفع'];
+        f.details.value = r['تفصيل'] || '';
+
+        const editProjectTotalRow = document.getElementById('editProjectTotalRow');
+        const projectOptions = document.getElementById('projectOptions');
+        const paymentMode = document.getElementById('paymentMode');
+        const installmentGroupInput = document.getElementById('installmentGroupId');
+        const totalInput = document.getElementById('installmentTotalAmount');
+        const remainingInput = document.getElementById('remainingAmount');
+
+        if (editProjectTotalRow) editProjectTotalRow.style.display = 'none';
+        if (remainingInput) remainingInput.value = '';
+        setSecondInstallmentLockState(false);
+
+        if (supportsSplitPayments(r['الخدمة']) && r['حالة الدفع'] !== 'استرجاع') {
+            if (projectOptions) projectOptions.style.display = 'flex';
+            if (paymentMode) {
+                const detailText = String(r['تفصيل'] || '');
+                if (detailText.includes('الشطر الثاني')) {
+                    paymentMode.value = 'second';
+                } else if (detailText.includes('الشطر الأول')) {
+                    paymentMode.value = 'first';
+                } else if (detailText.includes('دفع كامل')) {
+                    paymentMode.value = 'full';
+                } else {
+                    paymentMode.value = 'full';
+                }
+            }
+            if (installmentGroupInput) {
+                installmentGroupInput.value = r.project_id || '';
+            }
+            if (totalInput) {
+                const match = String(r['تفصيل'] || '').match(/إجمالي المشروع:\s*([0-9]+(?:\.[0-9]+)?)/);
+                totalInput.value = match && match[1] ? Number(match[1]).toFixed(2) : '';
+            }
+            if (paymentMode && paymentMode.value === 'second' && remainingInput) {
+                remainingInput.value = f.amount.value;
+            }
+        } else {
+            if (projectOptions) projectOptions.style.display = 'none';
+            if (paymentMode) paymentMode.value = 'full';
+            if (installmentGroupInput) installmentGroupInput.value = '';
+            if (totalInput) {
+                totalInput.value = '';
+                totalInput.required = false;
+            }
+            if (installmentGroupInput) {
+                installmentGroupInput.required = false;
+            }
+        }
+        updatePaymentModeUI();
+
+        window.scrollTo(0, 0);
+      }
+      
+      // Autocomplete functionality
+      let autocompleteFocus = -1;
+      let autocompleteDebounce = null;
+      let autocompleteRequestCounter = 0;
+
+      function initAutocomplete() {
+        const inputs = [
+          document.getElementById('customerInput'),
+          document.getElementById('filterCustomer')
+        ].filter(Boolean);
+
+        inputs.forEach(attachAutocomplete);
+
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.autocomplete')) {
+            closeAllLists();
+          }
+        });
+      }
+
+      function attachAutocomplete(inputElement) {
+        if (!inputElement || inputElement.dataset.autocompleteBound === '1') {
+          return;
+        }
+        inputElement.dataset.autocompleteBound = '1';
+
+        inputElement.addEventListener('input', function() {
+          const searchValue = this.value.trim();
+          closeAllLists();
+          autocompleteFocus = -1;
+
+          if (searchValue.length < 1) {
+            return;
+          }
+
+          const requestId = ++autocompleteRequestCounter;
+          clearTimeout(autocompleteDebounce);
+          autocompleteDebounce = setTimeout(() => {
+            searchCustomerNames(searchValue, function(customerNames) {
+              if (requestId !== autocompleteRequestCounter) {
+                return;
+              }
+              renderAutocompleteItems(inputElement, customerNames, searchValue);
+            });
+          }, 180);
+        });
+
+        inputElement.addEventListener('keydown', function(e) {
+          const dropdown = getAutocompleteDropdown(this);
+          if (!dropdown) return;
+
+          const items = dropdown.querySelectorAll('.autocomplete-item');
+          if (!items.length) return;
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            autocompleteFocus++;
+            addActive(items);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            autocompleteFocus--;
+            addActive(items);
+          } else if (e.key === 'Enter') {
+            if (autocompleteFocus > -1) {
+              e.preventDefault();
+              items[autocompleteFocus].dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            }
+          } else if (e.key === 'Escape') {
+            closeAllLists();
+          }
+        });
+      }
+
+      function getAutocompleteContainer(inputElement) {
+        return inputElement.closest('.autocomplete') || inputElement.parentElement;
+      }
+
+      function getAutocompleteDropdown(inputElement) {
+        const container = getAutocompleteContainer(inputElement);
+        return container ? container.querySelector('.autocomplete-items') : null;
+      }
+
+      function renderAutocompleteItems(inputElement, customerNames, searchTerm) {
+        closeAllLists();
+
+        const container = getAutocompleteContainer(inputElement);
+        if (!container) return;
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'autocomplete-items';
+
+        const uniqueNames = [...new Set((customerNames || [])
+          .map((name) => String(name || '').trim())
+          .filter(Boolean))]
+          .slice(0, 10);
+
+        if (!uniqueNames.length) {
+          const empty = document.createElement('div');
+          empty.className = 'autocomplete-empty';
+          empty.textContent = 'لا توجد نتائج مطابقة';
+          dropdown.appendChild(empty);
+          container.appendChild(dropdown);
+          return;
+        }
+
+        uniqueNames.forEach(function(name) {
+          const item = document.createElement('div');
+          item.className = 'autocomplete-item';
+          item.dataset.value = name;
+          item.appendChild(highlightMatch(name, searchTerm));
+          item.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            inputElement.value = this.dataset.value || '';
+            closeAllLists();
+          });
+          dropdown.appendChild(item);
+        });
+
+        container.appendChild(dropdown);
+      }
+      
+      // Safe highlight helper: returns DOM nodes (no innerHTML) for untrusted DB values.
+      function highlightMatch(name, searchTerm) {
+        const frag = document.createDocumentFragment();
+        const safeName = String(name ?? '');
+        const term = String(searchTerm ?? '');
+
+        if (!term) {
+          frag.appendChild(document.createTextNode(safeName));
+          return frag;
+        }
+
+        const lowerName = safeName.toLowerCase();
+        const lowerTerm = term.toLowerCase();
+        const idx = lowerName.indexOf(lowerTerm);
+        if (idx === -1) {
+          frag.appendChild(document.createTextNode(safeName));
+          return frag;
+        }
+
+        frag.appendChild(document.createTextNode(safeName.slice(0, idx)));
+        const strong = document.createElement('strong');
+        strong.textContent = safeName.slice(idx, idx + term.length);
+        frag.appendChild(strong);
+        frag.appendChild(document.createTextNode(safeName.slice(idx + term.length)));
+        return frag;
+      }
+      
+      // (Removed legacy highlight functions that used HTML strings; keep everything DOM-safe.)
+      
+      function addActive(items) {
+        if (!items || !items.length) return false;
+        removeActive(items);
+        if (autocompleteFocus >= items.length) autocompleteFocus = 0;
+        if (autocompleteFocus < 0) autocompleteFocus = (items.length - 1);
+        items[autocompleteFocus].classList.add("autocomplete-active");
+      }
+      
+      function removeActive(items) {
+        for (let i = 0; i < items.length; i++) {
+          items[i].classList.remove("autocomplete-active");
+        }
+      }
+      
+      function closeAllLists() {
+        let items = document.getElementsByClassName("autocomplete-items");
+        while (items.length > 0) {
+          if (items[0].parentNode) {
+            items[0].parentNode.removeChild(items[0]);
+          } else {
+            break;
+          }
+        }
+        autocompleteFocus = -1;
+      }
+      
+      // Function to search customer names via API
+      function searchCustomerNames(searchTerm, callback) {
+        const safeTerm = String(searchTerm || '').trim();
+        if (!safeTerm) {
+          callback([]);
+          return;
+        }
+
+        apiCall('search_customer_names', { search: safeTerm })
+          .then(function(result) {
+            if (result && result.success && result.customerNames) {
+              callback(result.customerNames);
+            } else {
+              callback([]);
+            }
+          })
+          .catch(function() {
+            callback([]);
+          });
+      }
+    })();
+  </script>
+</body>
+</html>
+

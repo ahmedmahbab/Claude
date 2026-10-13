@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة وصل متعدد - Al Nour Elite</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: white;
+            color: #000;
+            line-height: 1.4;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .receipt {
+            width: 72mm;
+            max-width: 72mm;
+            margin: 0 auto;
+            padding: 2mm 1mm;
+            background: white;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .left {
+            text-align: left;
+        }
+        
+        .right {
+            text-align: right;
+        }
+        
+        .bold {
+            font-weight: 900;
+        }
+        
+        .large {
+            font-size: 16px;
+            font-weight: 900;
+        }
+        
+        .medium {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .small {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .line {
+            border-bottom: 1px solid #000;
+            margin: 2px 0;
+        }
+        
+        .double-line {
+            border-bottom: 2px solid #000;
+            margin: 3px 0;
+        }
+        
+        .dotted-line {
+            border-bottom: 1px dotted #000;
+            margin: 1px 0;
+        }
+        
+        .space-sm {
+            margin: 2px 0;
+        }
+        
+        .space-md {
+            margin: 4px 0;
+        }
+        
+        .space-lg {
+            margin: 6px 0;
+        }
+        
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1px 0;
+        }
+        
+        .amount-box {
+            background: transparent;
+            color: #000;
+            padding: 4px;
+            margin: 4px 0;
+            text-align: center;
+            border: 2px solid #000;
+        }
+        
+        .no-print {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .print-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 12px;
+        }
+        
+        .print-btn:hover {
+            background: #0056b3;
+        }
+        
+        .close-btn {
+            background: #6c757d;
+        }
+        
+        .close-btn:hover {
+            background: #545b62;
+        }
+        
+        .loading, .error {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+        
+        .error {
+            color: #d32f2f;
+        }
+        
+        /* طباعة حرارية */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                font-weight: bold;
+            }
+            
+            .receipt {
+                width: 70mm;
+                max-width: 70mm;
+                margin: 0 1mm;
+                padding: 1mm;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .amount-box {
+                background: transparent !important;
+                color: #000 !important;
+                border: 2px solid #000 !important;
+            }
+            
+            .line, .double-line, .dotted-line {
+                border-color: #000 !important;
+            }
+        }
+        
+        @page {
+            size: 80mm auto;
+            margin: 1mm;
+        }
+        
+        .invoice-header {
+            margin-bottom: 8px;
+        }
+        
+        .operation-item {
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dotted #000;
+        }
+        
+        .operation-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="print-btn" onclick="window.print()">🖨️ طباعة</button>
+        <button class="print-btn close-btn" onclick="window.close()">❌ إغلاق</button>
+    </div>
+
+    <div id="loading" class="loading">
+        جاري تحميل بيانات الوصل...
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+        خطأ في تحميل بيانات الوصل
+    </div>
+
+    <div id="receipt" class="receipt" style="display: none;">
+        <!-- رأس الوصل -->
+        <div class="center space-sm invoice-header">
+            <div class="bold large">Al Nour Elite</div>
+            <div class="line"></div>
+            <div class="small">Facture N°: <span id="invoiceNumber">-</span></div>
+            <div class="small">Date: <span id="invoiceDate">-</span></div>
+        </div>
+        
+        <div class="line"></div>
+        
+        <!-- تفاصيل العمليات -->
+        <div id="operationsList" class="space-sm">
+            <!-- العمليات سيتم إدراجها هنا -->
+        </div>
+        
+        <div class="line"></div>
+        
+        <!-- الإجمالي -->
+        <div class="amount-box">
+            <div class="small">الإجمالي</div>
+            <div class="bold medium">
+                <span id="totalAmount">0.00</span> د.ج
+            </div>
+        </div>
+        
+        <div class="line"></div>
+        
+        <!-- الخاتمة -->
+        <div class="center space-sm">
+            <div class="bold small">شكراً لثقتكم بنا</div>
+            <div class="small">
+                <span id="printDate"></span>
+            </div>
+        </div>
+        
+        <div class="space-sm"></div>
+        
+        <!-- خط القطع -->
+        <div class="center small">
+            - - - - - - - - - - - - - - - -
+        </div>
+    </div>
+
+    <script>
+        // Function to receive data from parent window
+        function setSelectedOperations(operations) {
+            window.selectedOperations = operations;
+            displayReceipt(operations);
+        }
+
+        function escapeHtml(value) {
+            const str = String(value ?? '');
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+            return str.replace(/[&<>"']/g, (ch) => map[ch]);
+        }
+        
+        // Function to generate sequential invoice number
+        function generateInvoiceNumber() {
+            // For demonstration purposes, we'll generate a sequential number
+            // In a real implementation, this would need to be stored in a database
+            // Format: Sequential number + Day + Month + Year (2 digits)
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear().toString().substr(2);
+            
+            // Generate a simple sequential number (in real implementation, retrieve from database)
+            // For now, we'll use a timestamp-based approach to simulate sequential numbers
+            const sequentialNum = String(Math.floor(Date.now() / 1000) % 100).padStart(2, '0');
+            
+            // Format: Sequential number + Day + Month + Year
+            return sequentialNum + day + month + year;
+        }
+        
+        // Function to convert number to Arabic words
+        function numberToArabicWords(num) {
+            const arabicDigits = ['صفر', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+            const arabicTens = ['عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+            const arabicHundreds = ['مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+            const arabicThousands = ['ألف', 'ألفان', 'ثلاثة آلاف', 'أربعة آلاف', 'خمسة آلاف', 'ستة آلاف', 'سبعة آلاف', 'ثمانية آلاف', 'تسعة آلاف'];
+            
+            if (num === 0) return arabicDigits[0];
+            
+            let result = '';
+            const intNum = Math.floor(num);
+            const decimalNum = Math.round((num - intNum) * 100);
+            
+            if (intNum < 10) {
+                result = arabicDigits[intNum];
+            } else if (intNum < 100) {
+                const tens = Math.floor(intNum / 10);
+                const units = intNum % 10;
+                
+                if (tens === 1) {
+                    if (units === 0) {
+                        result = arabicTens[0];
+                    } else if (units === 1) {
+                        result = 'أحد عشر';
+                    } else if (units === 2) {
+                        result = 'اثنا عشر';
+                    } else {
+                        result = arabicDigits[units] + ' ' + arabicTens[0];
+                    }
+                } else {
+                    if (units === 0) {
+                        result = arabicTens[tens - 1];
+                    } else {
+                        result = arabicDigits[units] + ' و' + arabicTens[tens - 1];
+                    }
+                }
+            } else if (intNum < 1000) {
+                const hundreds = Math.floor(intNum / 100);
+                const remainder = intNum % 100;
+                
+                result = arabicHundreds[hundreds - 1];
+                if (remainder > 0) {
+                    result += ' و' + numberToArabicWords(remainder);
+                }
+            } else if (intNum < 10000) {
+                const thousands = Math.floor(intNum / 1000);
+                const remainder = intNum % 1000;
+                
+                if (thousands === 1) {
+                    result = arabicThousands[0];
+                } else if (thousands === 2) {
+                    result = arabicThousands[1];
+                } else {
+                    result = arabicDigits[thousands] + ' ' + arabicThousands[0];
+                }
+                
+                if (remainder > 0) {
+                    result += ' و' + numberToArabicWords(remainder);
+                }
+            }
+            
+            if (decimalNum > 0) {
+                result += ' و' + numberToArabicWords(decimalNum) + ' سنتيم';
+            }
+            
+            return result + ' دينار جزائري';
+        }
+        
+        function displayReceipt(operations) {
+            // إخفاء شاشة التحميل
+            document.getElementById('loading').style.display = 'none';
+            
+            // عرض الوصل
+            document.getElementById('receipt').style.display = 'block';
+            
+            // Generate invoice number
+            const invoiceNumber = generateInvoiceNumber();
+            document.getElementById('invoiceNumber').textContent = invoiceNumber;
+            
+            // Set invoice date
+            const now = new Date();
+            document.getElementById('invoiceDate').textContent = formatDate(now);
+            
+            // Display operations
+            const operationsList = document.getElementById('operationsList');
+            let operationsHtml = '';
+            
+            // Calculate totals with correct formula
+            // TTC = HT + TVA + Timbre
+            // TVA = 19% of HT
+            // Timbre = 1% of (HT + TVA)
+            // So: TTC = HT + (0.19 * HT) + (0.01 * (HT + 0.19 * HT))
+            // TTC = HT * (1 + 0.19 + 0.01 * 1.19)
+            // TTC = HT * 1.2019
+            // Therefore: HT = TTC / 1.2019
+            
+            let totalTTC = 0;
+            
+            operations.forEach(operation => {
+                const ttc = parseFloat(operation['المبلغ']) || 0;
+                totalTTC += ttc;
+                
+                const customer = escapeHtml(operation['إسم الزبون'] || '-');
+                const service = escapeHtml(operation['الخدمة'] || '-');
+
+                // Calculate HT from TTC
+                const ht = ttc / 1.2019;
+                const tva = ht * 0.19;
+                const timbre = (ht + tva) * 0.01;
+                
+                operationsHtml += `
+                    <div class="operation-item">
+                        <div class="row">
+                            <span class="bold">العميل:</span>
+                            <span>${customer}</span>
+                        </div>
+                        <div class="dotted-line"></div>
+                        
+                        <div class="row">
+                            <span class="bold">الخدمة:</span>
+                            <span>${service}</span>
+                        </div>
+                        <div class="dotted-line"></div>
+                        
+                        <div class="row">
+                            <span class="bold">HT:</span>
+                            <span>${ht.toFixed(2)}</span>
+                        </div>
+                        <div class="dotted-line"></div>
+                        
+                        <div class="row">
+                            <span class="bold">TVA 19%:</span>
+                            <span>${tva.toFixed(2)}</span>
+                        </div>
+                        <div class="dotted-line"></div>
+                        
+                        <div class="row">
+                            <span class="bold">Timbre 1%:</span>
+                            <span>${timbre.toFixed(2)}</span>
+                        </div>
+                        <div class="dotted-line"></div>
+                        
+                        <div class="row bold">
+                            <span>TTC:</span>
+                            <span>${ttc.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            operationsList.innerHTML = operationsHtml;
+            
+            // Calculate HT, TVA, and Timbre for total
+            const totalHT = totalTTC / 1.2019;
+            const totalTVA = totalHT * 0.19;
+            const totalTimbre = (totalHT + totalTVA) * 0.01;
+            
+            // Set total amounts
+            document.getElementById('totalAmount').textContent = totalTTC.toFixed(2);
+            
+            // Add total in words
+            const totalInWords = numberToArabicWords(totalTTC);
+            
+            // Add total in words to the receipt
+            const totalInWordsElement = document.createElement('div');
+            totalInWordsElement.className = 'center small space-sm';
+            totalInWordsElement.innerHTML = `<div class="bold">المبلغ الإجمالي:</div><div>${totalInWords}</div>`;
+            document.querySelector('.receipt').insertBefore(totalInWordsElement, document.querySelector('.line:last-child'));
+            
+            // Set print date
+            document.getElementById('printDate').textContent = formatDateTime(new Date());
+            
+            // Update page title
+            document.title = `فاتورة مجمعة - ${invoiceNumber}`;
+        }
+        
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+        }
+        
+        function formatDate(date) {
+            if (!date) return '-';
+            
+            try {
+                return date.toLocaleDateString('ar-DZ', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            } catch (e) {
+                return date;
+            }
+        }
+        
+        function formatDateTime(date) {
+            return date.toLocaleDateString('ar-DZ', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // طباعة تلقائية عند الحاجة
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoPrint = urlParams.get('auto');
+        if (autoPrint === 'true') {
+            setTimeout(() => {
+                window.print();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

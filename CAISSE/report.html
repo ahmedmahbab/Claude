@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تقرير الدفعات للفترة – Al Nour Elite</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+      --primary: #1E88E5; 
+      --secondary: #FFD700; 
+      --success: #28a745;
+      --info: #17a2b8;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --dark: #343a40;
+      --light: #f8f9fa;
+      --bg: #f4f7fa; 
+      --card-bg: #fff; 
+      --font-main: 'Tajawal', sans-serif; 
+      --radius: 8px; 
+      --spacing: 16px; 
+      --shadow: 0 4px 12px rgba(0,0,0,0.05); 
+    }
+    * { box-sizing: border-box; }
+    body { 
+      margin: 0; 
+      font-family: var(--font-main); 
+      background: var(--bg); 
+      color: #333; 
+      padding: var(--spacing);
+    }
+    header { 
+      background: var(--primary); 
+      color: #fff; 
+      padding: var(--spacing); 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      border-radius: var(--radius);
+      margin-bottom: var(--spacing);
+      box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand h1 { font-size: 1.5rem; margin: 0; }
+    .brand img { height: 50px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .card { 
+      background: var(--card-bg); 
+      border-radius: var(--radius); 
+      box-shadow: var(--shadow); 
+      padding: var(--spacing); 
+      margin-bottom: var(--spacing); 
+    }
+    h2 { 
+      margin-top: 0; 
+      color: var(--primary); 
+      font-size: 1.4rem; 
+      border-bottom: 2px solid var(--primary); 
+      display: inline-block; 
+      padding-bottom: 4px; 
+    }
+    .table-responsive { overflow-x: auto; margin-top: var(--spacing); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { 
+      border: 1px solid #ddd; 
+      padding: 12px; 
+      text-align: center; 
+      font-size: 0.95rem; 
+    }
+    th { 
+      background: var(--primary); 
+      color: #fff; 
+    }
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    th.sortable:hover {
+      background: #1565c0;
+    }
+    .sort-indicator {
+      display: inline-block;
+      min-width: 1.2em;
+      margin-inline-start: 6px;
+      font-size: 0.9em;
+    }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .total-row { 
+      font-weight: bold; 
+      background: #e9ecef !important; 
+    }
+    .print-btn {
+      background: var(--secondary);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .2s;
+      font-size: 1rem;
+      margin: 10px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .print-btn:hover {
+      background: #e0b500;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .no-print {
+      text-align: center;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        padding: 0;
+        background: #fff;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+      .print-btn {
+        display: none;
+      }
+    }
+    .summary-card {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing);
+      margin-bottom: var(--spacing);
+    }
+    .summary-item {
+      flex: 1;
+      min-width: 200px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--spacing);
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .summary-item:hover {
+      transform: translateY(-5px);
+    }
+    .summary-item h3 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+    .summary-item .amount {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .service-summary {
+      margin-top: var(--spacing);
+    }
+    .service-section {
+      margin-bottom: 30px;
+      border: 1px solid #e0e0e0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .service-header {
+      background: linear-gradient(135deg, var(--primary), #0d6efd);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.2rem;
+    }
+    .service-total {
+      font-weight: bold;
+      font-size: 1.3rem;
+    }
+    .source-breakdown {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+    .source-card {
+      flex: 1;
+      min-width: 180px;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 15px;
+      text-align: center;
+      border-top: 4px solid var(--primary);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .source-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .source-card.caisse {
+      border-top-color: var(--success);
+    }
+    .source-card.ccp-am {
+      border-top-color: var(--info);
+    }
+    .source-card.ccp-im {
+      border-top-color: var(--warning);
+    }
+    .source-name {
+      font-weight: bold;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: var(--dark);
+    }
+    .source-amount {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .source-amount.caisse {
+      color: var(--success);
+    }
+    .source-amount.ccp-am {
+      color: var(--info);
+    }
+    .source-amount.ccp-im {
+      color: var(--warning);
+    }
+    .currency {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    .unpaid-section {
+      border: 2px solid var(--danger);
+    }
+    .unpaid-header {
+      background: linear-gradient(135deg, var(--danger), #c82333);
+      color: white;
+      padding: 15px 20px;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img src="logo.png" alt="شعار" style="height: 50px; border-radius: 50%;">
+        <h1>تقرير الدفعات للفترة</h1>
+      </div>
+    </header>
+    
+    <div class="no-print">
+      <button class="print-btn" onclick="window.print()">🖨️ طباعة التقرير</button>
+    </div>
+    
+    <div class="card">
+      <h2>ملخص التقرير</h2>
+      <div class="summary-card">
+        <div class="summary-item">
+          <h3>إجمالي الدفعات</h3>
+          <div class="amount" id="totalRecords">0</div>
+          <div>عملية مدفوعة</div>
+        </div>
+        <div class="summary-item">
+          <h3>إجمالي المبالغ</h3>
+          <div class="amount" id="totalAmount">0.00</div>
+          <div>دينار جزائري</div>
+        </div>
+        <div class="summary-item">
+          <h3>الفترة</h3>
+          <div id="reportPeriod">-</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>تقرير الخدمات بالتفصيل</h2>
+      <div id="detailedServiceReport">
+        <!-- التقرير المفصل للخدمات سيظهر هنا -->
+      </div>
+    </div>
+    
+    <div class="card unpaid-section">
+      <h2>العمليات غير المدفوعة</h2>
+      <div class="table-responsive">
+        <table id="unpaidReportTable">
+          <thead>
+            <tr>
+              <th>رقم العملية</th>
+              <th>التاريخ</th>
+              <th>إسم الزبون</th>
+              <th>الخدمة</th>
+              <th>المبلغ</th>
+              <th>الصندوق</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>تفاصيل الدفعات المدفوعة</h2>
+      <div class="no-print">
+        <button class="print-btn" id="printSelectedBtn" style="display: none;">🖨️ طباعة المحدد</button>
+      </div>
+      <div class="table-responsive">
+        <table id="reportTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllCheckbox"></th>
+              <th>رقم العملية</th>
+              <th>التاريخ</th>
+              <th class="sortable" data-sort-key="customer">إسم الزبون<span class="sort-indicator"></span></th>
+              <th>الخدمة</th>
+              <th>المبلغ</th>
+              <th>الحالة</th>
+              <th class="sortable" data-sort-key="source">الصندوق<span class="sort-indicator"></span></th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = 'api.php';
+    const recordById = new Map();
+    const selectedOperationIds = new Set();
+    let paidRecordsState = [];
+    let currentSort = {
+      key: null,
+      direction: 'asc'
+    };
+
+    function escapeHtml(value) {
+      const str = String(value ?? '');
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      return str.replace(/[&<>"']/g, (ch) => map[ch]);
+    }
+    
+    // الحصول على التواريخ من URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromDate = urlParams.get('from');
+    const toDate = urlParams.get('to');
+    
+    if (!fromDate || !toDate) {
+      document.body.innerHTML = '<div class="container"><div class="card"><h2>خطأ</h2><p>يرجى تحديد الفترة للتقرير.</p></div></div>';
+    } else {
+      // عرض الفترة في التقرير
+      document.getElementById('reportPeriod').textContent = `من ${fromDate} إلى ${toDate}`;
+      
+      // تحميل بيانات التقرير
+      loadReportData(fromDate, toDate);
+    }
+    
+    async function apiCall(action, params = {}) {
+      const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...params })
+      };
+      
+      try {
+        const response = await fetch(apiUrl, options);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('API Call Error:', error);
+        return null;
+      }
+    }
+    
+    async function loadReportData(from, to) {
+      try {
+        // جلب جميع السجلات للفترة المحددة
+        const records = await apiCall('filter_records', {
+          fromDate: from,
+          toDate: to
+        });
+        
+        if (records && Array.isArray(records)) {
+          // فصل السجلات المدفوعة عن غير المدفوعة
+          const paidRecords = records.filter(record => record['حالة الدفع'] === 'دفع');
+          const unpaidRecords = records.filter(record => record['حالة الدفع'] === 'لم يدفع');
+          
+          paidRecordsState = paidRecords.slice();
+          renderReport();
+          renderUnpaidReport(unpaidRecords);
+          renderDetailedServiceReport(paidRecords);
+          updateSummary(paidRecords);
+        } else {
+          document.body.innerHTML = '<div class="container"><div class="card"><h2>خطأ</h2><p>فشل في تحميل بيانات التقرير.</p></div></div>';
+        }
+      } catch (error) {
+        console.error('Error loading report data:', error);
+        document.body.innerHTML = '<div class="container"><div class="card"><h2>خطأ</h2><p>حدث خطأ أثناء تحميل التقرير.</p></div></div>';
+      }
+    }
+    
+    function getSortedPaidRecords() {
+      const records = paidRecordsState.slice();
+
+      if (!currentSort.key) {
+        return records;
+      }
+
+      const keyMap = {
+        customer: 'إسم الزبون',
+        source: 'الصندوق'
+      };
+      const dataKey = keyMap[currentSort.key];
+      const direction = currentSort.direction === 'desc' ? -1 : 1;
+      const collator = new Intl.Collator('ar', { sensitivity: 'base', numeric: true });
+
+      return records.sort((a, b) => {
+        const valueA = String(a[dataKey] ?? '').trim();
+        const valueB = String(b[dataKey] ?? '').trim();
+        return collator.compare(valueA, valueB) * direction;
+      });
+    }
+
+    function updateSortIndicators() {
+      document.querySelectorAll('#reportTable th.sortable').forEach((header) => {
+        const indicator = header.querySelector('.sort-indicator');
+        if (!indicator) return;
+
+        indicator.textContent = header.dataset.sortKey === currentSort.key
+          ? (currentSort.direction === 'asc' ? '▲' : '▼')
+          : '';
+      });
+    }
+
+    function syncSelectAllCheckbox() {
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const checkboxes = document.querySelectorAll('.operation-checkbox');
+      const checkedCount = document.querySelectorAll('.operation-checkbox:checked').length;
+
+      if (!selectAllCheckbox) return;
+
+      selectAllCheckbox.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+      selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+    }
+
+    function renderReport() {
+      const tableBody = document.querySelector('#reportTable tbody');
+      const records = getSortedPaidRecords();
+      let rows = '';
+
+      recordById.clear();
+      
+      records.forEach(record => {
+        const opIdRaw = String(record['رقم العملية'] ?? '');
+        if (opIdRaw) {
+          recordById.set(opIdRaw, record);
+        }
+
+        const opId = escapeHtml(opIdRaw);
+        const date = escapeHtml(record['التاريخ']);
+        const customer = escapeHtml(record['إسم الزبون']);
+        const service = escapeHtml(record['الخدمة']);
+        const status = escapeHtml(record['حالة الدفع']);
+        const source = escapeHtml(record['الصندوق']);
+        const amount = parseFloat(record['المبلغ']) || 0;
+        const isChecked = selectedOperationIds.has(opIdRaw) ? 'checked' : '';
+        rows += `
+          <tr>
+            <td><input type="checkbox" class="operation-checkbox" data-id="${opId}" ${isChecked}></td>
+            <td>${opId}</td>
+            <td>${date}</td>
+            <td>${customer}</td>
+            <td>${service}</td>
+            <td>${amount.toFixed(2)}</td>
+            <td>${status}</td>
+            <td>${source}</td>
+          </tr>
+        `;
+      });
+      
+      tableBody.innerHTML = rows;
+      
+      document.querySelectorAll('.operation-checkbox').forEach((checkbox) => {
+        checkbox.onchange = function() {
+          if (this.checked) {
+            selectedOperationIds.add(this.dataset.id);
+          } else {
+            selectedOperationIds.delete(this.dataset.id);
+          }
+          syncSelectAllCheckbox();
+          updatePrintButtonVisibility();
+        };
+      });
+      
+      document.getElementById('selectAllCheckbox').onchange = function() {
+        const checkboxes = document.querySelectorAll('.operation-checkbox');
+        checkboxes.forEach((checkbox) => {
+          checkbox.checked = this.checked;
+          if (this.checked) {
+            selectedOperationIds.add(checkbox.dataset.id);
+          } else {
+            selectedOperationIds.delete(checkbox.dataset.id);
+          }
+        });
+        syncSelectAllCheckbox();
+        updatePrintButtonVisibility();
+      };
+
+      document.querySelectorAll('#reportTable th.sortable').forEach((header) => {
+        header.onclick = function() {
+          const sortKey = this.dataset.sortKey;
+          if (currentSort.key === sortKey) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+          } else {
+            currentSort.key = sortKey;
+            currentSort.direction = 'asc';
+          }
+          renderReport();
+        };
+      });
+      
+      updateSortIndicators();
+      syncSelectAllCheckbox();
+      updatePrintButtonVisibility();
+      document.getElementById('printSelectedBtn').onclick = printSelectedOperations;
+    }
+    
+    function renderUnpaidReport(records) {
+      const tableBody = document.querySelector('#unpaidReportTable tbody');
+      let rows = '';
+      
+      records.forEach(record => {
+        const opId = escapeHtml(record['رقم العملية']);
+        const date = escapeHtml(record['التاريخ']);
+        const customer = escapeHtml(record['إسم الزبون']);
+        const service = escapeHtml(record['الخدمة']);
+        const source = escapeHtml(record['الصندوق']);
+        const amount = parseFloat(record['المبلغ']) || 0;
+        rows += `
+          <tr>
+            <td>${opId}</td>
+            <td>${date}</td>
+            <td>${customer}</td>
+            <td>${service}</td>
+            <td>${amount.toFixed(2)}</td>
+            <td>${source}</td>
+          </tr>
+        `;
+      });
+      
+      tableBody.innerHTML = rows;
+      
+      // إخفاء قسم العمليات غير المدفوعة إذا لم تكن هناك أي عمليات
+      if (records.length === 0) {
+        document.querySelector('.unpaid-section').style.display = 'none';
+      }
+    }
+    
+    function renderDetailedServiceReport(records) {
+      // تجميع البيانات حسب الخدمة والصندوق
+      const serviceSummary = Object.create(null);
+      
+      records.forEach(record => {
+        const service = record['الخدمة'];
+        const source = record['الصندوق'];
+        const amount = parseFloat(record['المبلغ']) || 0;
+        
+        if (!serviceSummary[service]) {
+          serviceSummary[service] = {
+            total: 0,
+            sources: Object.create(null)
+          };
+        }
+        
+        serviceSummary[service].total += amount;
+        
+        if (!serviceSummary[service].sources[source]) {
+          serviceSummary[service].sources[source] = 0;
+        }
+        
+        serviceSummary[service].sources[source] += amount;
+      });
+      
+      // عرض التقرير المفصل
+      const container = document.getElementById('detailedServiceReport');
+      let html = '';
+      
+      for (const service in serviceSummary) {
+        const summary = serviceSummary[service];
+        html += `
+          <div class="service-section">
+            <div class="service-header">
+              <span>${escapeHtml(service)}</span>
+              <span class="service-total">${summary.total.toFixed(2)} د.ج</span>
+            </div>
+            <div class="source-breakdown">
+        `;
+        
+        // عرض المبالغ حسب الصندوق
+        const sources = [
+          { name: 'CAISSE', key: 'CAISSE', class: 'caisse' },
+          { name: 'CCP AM', key: 'CCP AM', class: 'ccp-am' },
+          { name: 'CCP IM', key: 'CCP IM', class: 'ccp-im' }
+        ];
+        
+        sources.forEach(source => {
+          const amount = summary.sources[source.key] || 0;
+          html += `
+            <div class="source-card ${source.class}">
+              <div class="source-name">${source.name}</div>
+              <div class="source-amount ${source.class}">${amount.toFixed(2)}</div>
+              <div class="currency">دينار</div>
+            </div>
+          `;
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+      }
+      
+      if (Object.keys(serviceSummary).length === 0) {
+        html = '<p style="text-align: center; color: #6c757d; padding: 20px;">لا توجد بيانات للعرض</p>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    function updateSummary(records) {
+      // تحديث ملخص التقرير
+      document.getElementById('totalRecords').textContent = records.length;
+      
+      // حساب إجمالي المبالغ
+      const totalAmount = records.reduce((sum, record) => {
+        return sum + (parseFloat(record['المبلغ']) || 0);
+      }, 0);
+      
+      document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+    }
+    
+    function updatePrintButtonVisibility() {
+      const selectedCount = document.querySelectorAll('.operation-checkbox:checked').length;
+      const printBtn = document.getElementById('printSelectedBtn');
+      printBtn.style.display = selectedCount > 0 ? 'inline-block' : 'none';
+    }
+    
+    function printSelectedOperations() {
+      const selectedCheckboxes = document.querySelectorAll('.operation-checkbox:checked');
+      if (selectedCheckboxes.length === 0) return;
+      
+      // Collect selected operations data
+      const selectedOperations = Array.from(selectedCheckboxes)
+        .map(checkbox => recordById.get(checkbox.dataset.id))
+        .filter(Boolean);
+      
+      // Open thermal print page with selected operations
+      const printWindow = window.open('print_multiple_thermal.html', '_blank');
+      
+      // Pass data to the print window when it loads
+      printWindow.onload = function() {
+        printWindow.setSelectedOperations(selectedOperations);
+      };
+    }
+  </script>
+</body>
+</html>
