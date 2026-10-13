@@ -139,6 +139,15 @@ try {
         case 'search_customer_names':
             handleSearchCustomerNames($input);
             break;
+        case 'get_prices':
+            handleGetPrices();
+            break;
+        case 'save_price':
+            handleSavePrice($input);
+            break;
+        case 'delete_price':
+            handleDeletePrice($input);
+            break;
         default:
             throw new Exception('Unknown action: ' . $action);
     }
@@ -263,6 +272,13 @@ function handleLogout() {
 }
 
 function handleCheckSession() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    if (empty($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'message' => 'No active session']);
+        exit;
+    }
     requireAuth();
     try {
         // Clear any output buffers
@@ -784,7 +800,6 @@ function handleUpdateRecord($input) {
     requireAuth();
     
     error_log("handleUpdateRecord: Starting function");
-    error_log("handleUpdateRecord: Input data: " . json_encode($input));
     
     $id = trim((string)($input['id'] ?? ''));
     $date = $input['date'] ?? '';
@@ -825,7 +840,7 @@ function handleUpdateRecord($input) {
     // Handle project total amount update
     if (isset($input['new_total_amount']) && $input['new_total_amount'] > 0) {
         $new_total = floatval($input['new_total_amount']);
-        $details = preg_replace('/المبلغ الإجمالي: \d+\.?\d*/', "المبلغ الإجمالي: $new_total", $details);
+        $details = preg_replace('/إجمالي المشروع:\s*\d+(?:\.\d+)?/u', 'إجمالي المشروع: ' . number_format($new_total, 2, '.', ''), $details);
         error_log("handleUpdateRecord: Updated project total amount to: $new_total");
     }
     
@@ -944,6 +959,9 @@ function handleAddUser($input) {
     if (empty($username) || empty($password) || empty($full_name)) {
         throw new Exception('جميع الحقول مطلوبة');
     }
+    if (!in_array($role, ['admin', 'user'], true)) {
+        throw new Exception('الصلاحية غير صالحة');
+    }
     
     // Check if username already exists
     $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
@@ -995,6 +1013,13 @@ function handleUpdateUser($input) {
     
     if (empty($username) || empty($full_name)) {
         throw new Exception('اسم المستخدم والاسم الكامل مطلوبان');
+    }
+    if (!in_array($role, ['admin', 'user'], true)) {
+        throw new Exception('الصلاحية غير صالحة');
+    }
+    // Prevent the admin from removing their own admin role (would lock them out).
+    if ($id == $_SESSION['user_id'] && $role !== 'admin') {
+        throw new Exception('لا يمكنك إزالة صلاحية المدير من حسابك الخاص');
     }
     
     // Check if username is taken by another user
@@ -1106,5 +1131,124 @@ function handleSearchCustomerNames($input) {
     
     echo json_encode(['success' => true, 'customerNames' => $customerNames]);
 }
-?>
 
+// Pricing (price list) functions
+// A function (not a const) because the dispatcher above runs before this line is reached.
+function priceServices() {
+    return ['ADS META', 'CREATION VIDEOS', 'DEVELOPMENT', 'GRAPHIC DESIGN', 'Al Nour Site', 'Al Nour NFC', 'Pack marketing', 'Gestion de page'];
+}
+
+function ensurePricesTable() {
+    global $conn;
+    // Existing installations were created before the price list existed, so create the table on demand.
+    $sql = "CREATE TABLE IF NOT EXISTS `prices` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `service` VARCHAR(100) NOT NULL,
+        `package_name` VARCHAR(255) NOT NULL,
+        `price` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+        `description` TEXT DEFAULT NULL,
+        `sort_order` INT NOT NULL DEFAULT 0,
+        `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+        `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        KEY `idx_service` (`service`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+    if (!$conn->query($sql)) {
+        throw new Exception('تعذر تجهيز جدول الأسعار: ' . $conn->error);
+    }
+}
+
+function handleGetPrices() {
+    global $conn;
+    requireAuth();
+    ensurePricesTable();
+
+    $isAdmin = ($_SESSION['role'] ?? '') === 'admin';
+    $sql = "SELECT id, service, package_name, price, description, sort_order, is_active, updated_at FROM prices";
+    if (!$isAdmin) {
+        $sql .= " WHERE is_active = 1";
+    }
+    $sql .= " ORDER BY service, sort_order, price, id";
+
+    $result = $conn->query($sql);
+    if (!$result) {
+        throw new Exception('تعذر تحميل الأسعار: ' . $conn->error);
+    }
+    $prices = [];
+    while ($row = $result->fetch_assoc()) {
+        $row['id'] = intval($row['id']);
+        $row['price'] = floatval($row['price']);
+        $row['sort_order'] = intval($row['sort_order']);
+        $row['is_active'] = intval($row['is_active']);
+        $prices[] = $row;
+    }
+
+    echo json_encode(['success' => true, 'prices' => $prices, 'services' => priceServices()]);
+}
+
+function handleSavePrice($input) {
+    global $conn;
+    requireAdmin();
+    ensurePricesTable();
+
+    $id = intval($input['id'] ?? 0);
+    $service = trim((string)($input['service'] ?? ''));
+    $packageName = trim((string)($input['package_name'] ?? ''));
+    $priceRaw = $input['price'] ?? '';
+    $description = trim((string)($input['description'] ?? ''));
+    $sortOrder = intval($input['sort_order'] ?? 0);
+    $isActive = !empty($input['is_active']) ? 1 : 0;
+
+    if (!in_array($service, priceServices(), true)) {
+        throw new Exception('الخدمة غير صالحة');
+    }
+    if ($packageName === '' || mb_strlen($packageName, 'UTF-8') > 255) {
+        throw new Exception('اسم الباقة مطلوب (حتى 255 حرفاً)');
+    }
+    if (!is_numeric($priceRaw) || floatval($priceRaw) < 0) {
+        throw new Exception('السعر غير صحيح');
+    }
+    $price = round(floatval($priceRaw), 2);
+
+    if ($id > 0) {
+        $stmt = $conn->prepare("UPDATE prices SET service = ?, package_name = ?, price = ?, description = ?, sort_order = ?, is_active = ? WHERE id = ?");
+        $stmt->bind_param("ssdsiii", $service, $packageName, $price, $description, $sortOrder, $isActive, $id);
+    } else {
+        $stmt = $conn->prepare("INSERT INTO prices (service, package_name, price, description, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssdsii", $service, $packageName, $price, $description, $sortOrder, $isActive);
+    }
+
+    if (!$stmt->execute()) {
+        throw new Exception('فشل حفظ السعر: ' . $stmt->error);
+    }
+    if ($id > 0 && $stmt->affected_rows === 0) {
+        $check = $conn->prepare("SELECT 1 FROM prices WHERE id = ?");
+        $check->bind_param("i", $id);
+        $check->execute();
+        if ($check->get_result()->num_rows === 0) {
+            throw new Exception('السعر غير موجود');
+        }
+    }
+
+    echo json_encode(['success' => true, 'message' => $id > 0 ? 'تم تحديث السعر بنجاح' : 'تمت إضافة السعر بنجاح']);
+}
+
+function handleDeletePrice($input) {
+    global $conn;
+    requireAdmin();
+    ensurePricesTable();
+
+    $id = intval($input['id'] ?? 0);
+    if ($id <= 0) {
+        throw new Exception('معرف السعر مطلوب');
+    }
+
+    $stmt = $conn->prepare("DELETE FROM prices WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    if (!$stmt->execute()) {
+        throw new Exception('فشل حذف السعر: ' . $stmt->error);
+    }
+
+    echo json_encode(['success' => true, 'message' => 'تم حذف السعر بنجاح']);
+}
+?>

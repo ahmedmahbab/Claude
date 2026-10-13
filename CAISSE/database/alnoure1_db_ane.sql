@@ -42,6 +42,19 @@ CREATE TABLE IF NOT EXISTS `operations` (
   KEY `idx_editor` (`المحرر`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `prices` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `service` VARCHAR(100) NOT NULL,
+  `package_name` VARCHAR(255) NOT NULL,
+  `price` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+  `description` TEXT DEFAULT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_service` (`service`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- Seed admin account (password will be auto-hashed on first successful login by api.php)
 INSERT INTO `users` (`username`, `password`, `full_name`, `role`, `is_active`)
 VALUES ('admin', 'admin123', 'Administrator', 'admin', 1)

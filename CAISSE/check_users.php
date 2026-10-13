@@ -27,21 +27,27 @@ echo "<body>";
 
 echo "<h1>حالة المستخدمين في قاعدة البيانات</h1>";
 
+if ($conn->connect_error) {
+    echo "<p style='color:red'>فشل الاتصال بقاعدة البيانات: " . htmlspecialchars($conn->connect_error) . "</p>";
+    echo "</body></html>";
+    exit;
+}
+
 // Get all users and their status
 $sql = "SELECT id, username, full_name, role, is_active, created_at FROM users ORDER BY id";
 $result = $conn->query($sql);
 
-if ($result->num_rows > 0) {
+if ($result && $result->num_rows > 0) {
     echo "<table>";
     echo "<tr><th>ID</th><th>اسم المستخدم</th><th>الاسم الكامل</th><th>الدور</th><th>نشط</th><th>تاريخ الإنشاء</th></tr>";
     while($row = $result->fetch_assoc()) {
         echo "<tr>";
-        echo "<td>" . $row["id"] . "</td>";
-        echo "<td>" . $row["username"] . "</td>";
-        echo "<td>" . $row["full_name"] . "</td>";
-        echo "<td>" . $row["role"] . "</td>";
+        echo "<td>" . htmlspecialchars((string)$row["id"]) . "</td>";
+        echo "<td>" . htmlspecialchars((string)$row["username"]) . "</td>";
+        echo "<td>" . htmlspecialchars((string)$row["full_name"]) . "</td>";
+        echo "<td>" . htmlspecialchars((string)$row["role"]) . "</td>";
         echo "<td>" . ($row["is_active"] ? "نعم" : "لا") . "</td>";
-        echo "<td>" . $row["created_at"] . "</td>";
+        echo "<td>" . htmlspecialchars((string)$row["created_at"]) . "</td>";
         echo "</tr>";
     }
     echo "</table>";
@@ -54,7 +60,7 @@ $sql = "SELECT COUNT(*) as count FROM operations";
 $result = $conn->query($sql);
 if ($result) {
     $row = $result->fetch_assoc();
-    echo "<h2>إجمالي العمليات في قاعدة البيانات: " . $row["count"] . "</h2>";
+    echo "<h2>إجمالي العمليات في قاعدة البيانات: " . htmlspecialchars((string)$row["count"]) . "</h2>";
 } else {
     echo "<h2>جدول العمليات غير موجود أو غير قابل للوصول.</h2>";
 }

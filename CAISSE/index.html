@@ -169,7 +169,7 @@
         <h1>Al Nour Elite</h1>
       </div>
       <div class="user-info">
-        <span id="userInfo"></span> <a href="profile.html" style="color:white; margin:0 12px;">حسابي</a>
+        <span id="userInfo"></span> <a href="pricing.html" style="color:white; margin:0 12px;">الأسعار</a> <a href="profile.html" style="color:white; margin:0 12px;">حسابي</a>
         <div id="adminControls" class="dropdown" style="display: none;">
             <button class="dropbtn">الإدارة ⚙️</button>
             <div class="dropdown-content">
@@ -305,6 +305,7 @@
       const apiUrl = 'api.php';
       const LAST_OPERATION_STORAGE_KEY = 'last_saved_operation_id';
       let currentUser = null;
+      let appStarted = false;
 
       function escapeHtml(value) {
         const str = String(value ?? '');
@@ -404,7 +405,6 @@
       }
 
       async function apiCall(action, params = {}, method = 'POST') {
-          console.log("API call started:", { action, params });
           const options = {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -412,7 +412,6 @@
           };
           try {
               const response = await fetch(apiUrl, options);
-              console.log("API response received:", response);
               if (!response.ok) {
                   const errorText = await response.text();
                   console.error("----------- SERVER ERROR -----------");
@@ -421,7 +420,6 @@
                   throw new Error(`HTTP error! status: ${response.status}. Server says: ${errorText}`);
               }
               const text = await response.text();
-              console.log("API response text:", text);
               try {
                   const parsed = JSON.parse(text);
                   if (parsed && parsed.auth_required) {
@@ -475,8 +473,14 @@
         }
       }
 
+      // Local calendar date (toISOString() is UTC and gives yesterday's date just after midnight).
+      function localToday() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+
       function updateCurrentDate() {
-        const today = new Date().toISOString().slice(0,10);
+        const today = localToday();
         
         // تحديث تاريخ العملية الجديدة
         const paymentDateInput = document.querySelector('#paymentForm input[name="date"]');
@@ -689,6 +693,17 @@
 
       async function startApp() {
         document.getElementById('userInfo').textContent = `مرحباً, ${currentUser.full_name || currentUser.username} (${currentUser.role})`;
+
+        // startApp() runs again after re-login when the session expires; bind listeners only once,
+        // otherwise each submit would be sent several times (duplicate payments).
+        if (appStarted) {
+          adjustUserPrivileges();
+          loadFiltered();
+          checkMonthlyUnpaid();
+          return;
+        }
+        appStarted = true;
+
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             await apiCall('logout');
             location.reload();

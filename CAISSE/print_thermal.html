@@ -255,7 +255,7 @@
         
         <!-- المبلغ -->
         <div class="amount-box">
-            <div class="small">المبلغ المستلم</div>
+            <div class="small" id="amountLabel">المبلغ المستلم</div>
             <div class="bold medium">
                 <span id="amount">0.00</span> د.ج
             </div>
@@ -340,7 +340,9 @@
             
             // المبلغ
             const amount = parseFloat(data['المبلغ']) || 0;
-            document.getElementById('amount').textContent = amount.toFixed(2);
+            // الاسترجاع مخزَّن بالسالب: نعرضه كمبلغ مُسترجَع موجب.
+            if (amount < 0) document.getElementById('amountLabel').textContent = 'المبلغ المسترجع';
+            document.getElementById('amount').textContent = Math.abs(amount).toFixed(2);
             
             // التفاصيل (إذا وجدت)
             const cleanDetails = sanitizeReceiptDetails(data['تفصيل'] || '');

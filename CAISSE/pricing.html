@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>قائمة الأسعار – Al Nour Elite</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #1E88E5; --primary-dark: #1565c0; --secondary: #FFD700; --bg: #f4f7fa; --card-bg: #fff; --font-main: 'Tajawal', sans-serif; --radius: 8px; --spacing: 16px; --shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font-main); background: var(--bg); color: #333; }
+    header { background: var(--primary); color: #fff; padding: var(--spacing); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; box-shadow: var(--shadow); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img { height: 50px; border-radius: 50%; }
+    .brand h1 { font-size: 1.6rem; margin: 0; }
+    header nav { display: flex; align-items: center; gap: 12px; }
+    header nav a { color: #fff; font-weight: bold; text-decoration: none; }
+    header nav a:hover { text-decoration: underline; }
+    .container { max-width: 1200px; margin: var(--spacing) auto; padding: 0 var(--spacing); }
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--spacing); margin-bottom: var(--spacing); }
+    h2 { margin-top: 0; color: var(--primary); font-size: 1.4rem; border-bottom: 2px solid var(--primary); display: inline-block; padding-bottom: 4px; }
+    label { font-weight: 500; display: block; margin-bottom: 4px; }
+    input, select, textarea, button { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: var(--radius); margin-bottom: var(--spacing); font-size: 0.95rem; font-family: inherit; }
+    textarea { min-height: 70px; resize: vertical; }
+    button { background: var(--secondary); color: #000; border: none; padding: 12px; font-weight: bold; cursor: pointer; transition: background .2s; }
+    button:hover { background: #e0b500; }
+    button:disabled { opacity: .65; cursor: not-allowed; }
+    .btn-secondary { background: #e5e7eb; color: #111827; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .row { display: flex; flex-wrap: wrap; gap: var(--spacing); }
+    .col { flex: 1; min-width: 200px; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; margin-bottom: var(--spacing); font-weight: 500; }
+    .checkbox-label input { width: auto; margin: 0; }
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    .form-actions button { width: auto; min-width: 150px; margin-bottom: 0; }
+    .toolbar { display: flex; gap: var(--spacing); flex-wrap: wrap; align-items: flex-end; }
+    .toolbar .col { margin-bottom: 0; }
+    .toolbar button { width: auto; min-width: 140px; }
+    .alert { display: none; padding: 10px; border-radius: 4px; margin-bottom: 16px; font-weight: bold; }
+    .alert-success { background: #d4edda; color: #155724; }
+    .alert-danger { background: #f8d7da; color: #721c24; }
+
+    .service-group { margin-bottom: 28px; }
+    .service-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(135deg, var(--primary), #0d6efd); color: #fff; padding: 12px 16px; border-radius: var(--radius); margin-bottom: 12px; }
+    .service-title h3 { margin: 0; font-size: 1.15rem; }
+    .service-title span { font-size: .9rem; opacity: .9; }
+    .price-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing); }
+    .price-card { background: var(--card-bg); border: 1px solid #e2e8f0; border-top: 4px solid var(--secondary); border-radius: var(--radius); padding: var(--spacing); display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+    .price-card.inactive { opacity: .55; border-top-color: #94a3b8; }
+    .price-card h4 { margin: 0; font-size: 1.1rem; color: #1e293b; }
+    .price-value { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+    .price-value small { font-size: .9rem; color: #64748b; font-weight: 400; }
+    .price-desc { color: #475569; font-size: .92rem; line-height: 1.6; white-space: pre-line; flex: 1; }
+    .badge { display: inline-block; background: #e2e8f0; color: #334155; border-radius: 999px; padding: 2px 10px; font-size: .8rem; }
+    .card-actions { display: flex; gap: 8px; }
+    .card-actions button { width: auto; margin: 0; padding: 6px 12px; font-size: .9rem; }
+    .card-actions .delete { background: #fee2e2; color: #991b1b; }
+    .card-actions .delete:hover { background: #fecaca; }
+    .empty { text-align: center; color: #64748b; padding: 24px; font-style: italic; }
+    .admin-only { display: none; }
+    #mainContent { display: none; }
+    .print-header { display: none; }
+
+    @media (max-width: 768px) {
+      .row { flex-direction: column; }
+      .brand h1 { font-size: 1.3rem; }
+      .form-actions button, .toolbar button { width: 100%; }
+    }
+    @media print {
+      header, .no-print, .card-actions, .admin-only { display: none !important; }
+      body { background: #fff; }
+      .container { max-width: none; margin: 0; }
+      .card { box-shadow: none; padding: 0; }
+      .print-header { display: block; text-align: center; margin-bottom: 16px; }
+      .price-card { box-shadow: none; break-inside: avoid; }
+      .price-card.inactive { display: none; }
+      .service-title { background: #fff; color: #000; border: 1px solid #000; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="logo.png" alt="شعار">
+      <h1>قائمة الأسعار</h1>
+    </div>
+    <nav>
+      <a href="index.html">العودة للرئيسية</a>
+    </nav>
+  </header>
+
+  <div id="mainContent" class="container">
+    <div id="pageAlert" class="alert" role="status" aria-live="polite"></div>
+
+    <div class="card admin-only no-print" id="priceFormCard">
+      <h2 id="formTitle">إضافة سعر جديد</h2>
+      <form id="priceForm">
+        <input type="hidden" id="priceId">
+        <div class="row">
+          <div class="col"><label for="priceService">الخدمة</label><select id="priceService" required></select></div>
+          <div class="col"><label for="pricePackage">اسم الباقة / العرض</label><input type="text" id="pricePackage" maxlength="255" required placeholder="مثال: باقة أساسية"></div>
+          <div class="col"><label for="priceValue">السعر (د.ج)</label><input type="number" id="priceValue" min="0" step="0.01" required></div>
+        </div>
+        <div class="row">
+          <div class="col"><label for="priceDescription">الوصف / ما تشمله الباقة</label><textarea id="priceDescription" placeholder="سطر لكل ميزة"></textarea></div>
+        </div>
+        <div class="row">
+          <div class="col"><label for="priceOrder">ترتيب العرض</label><input type="number" id="priceOrder" step="1" value="0"></div>
+          <div class="col"><label class="checkbox-label"><input type="checkbox" id="priceActive" checked> ظاهر للمستخدمين</label></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="cancelPriceEdit" class="btn-secondary" style="display: none;">إلغاء التعديل</button>
+          <button type="submit" id="savePriceBtn">إضافة السعر</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="print-header">
+        <h2>Al Nour Elite – قائمة الأسعار</h2>
+        <div id="printDate"></div>
+      </div>
+      <div class="toolbar no-print">
+        <div class="col"><label for="searchPrice">بحث</label><input type="search" id="searchPrice" placeholder="اسم الباقة أو الوصف"></div>
+        <div class="col"><label for="filterService">الخدمة</label><select id="filterService"><option value="">الكل</option></select></div>
+        <button type="button" id="printPricesBtn">🖨️ طباعة القائمة</button>
+      </div>
+      <div id="pricesContainer"><p class="empty">جاري تحميل الأسعار...</p></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const apiUrl = 'api.php';
+      let currentUser = null;
+      let isAdmin = false;
+      let services = [];
+      let prices = [];
+
+      function escapeHtml(value) {
+        const str = String(value ?? '');
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return str.replace(/[&<>"']/g, (ch) => map[ch]);
+      }
+
+      function formatPrice(value) {
+        return Number(value || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      }
+
+      function showAlert(message, type = 'danger') {
+        const box = document.getElementById('pageAlert');
+        box.textContent = message;
+        box.className = `alert alert-${type}`;
+        box.style.display = 'block';
+        clearTimeout(showAlert._timer);
+        showAlert._timer = setTimeout(() => { box.style.display = 'none'; }, 5000);
+      }
+
+      async function apiCall(action, params = {}) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...params })
+          });
+          const result = await response.json();
+          if (result && result.auth_required) {
+            window.location.replace('index.html');
+            return null;
+          }
+          return result;
+        } catch (error) {
+          console.error('API Call Error:', error);
+          showAlert('حدث خطأ أثناء الاتصال بالخادم.');
+          return null;
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', init);
+
+      async function init() {
+        const session = await apiCall('check_session');
+        if (!(session && session.success)) {
+          window.location.replace('index.html');
+          return;
+        }
+        currentUser = session.user;
+        isAdmin = currentUser.role === 'admin';
+
+        document.getElementById('mainContent').style.display = 'block';
+        document.querySelectorAll('.admin-only').forEach(el => { el.style.display = isAdmin ? 'block' : 'none'; });
+        document.getElementById('printDate').textContent = new Date().toLocaleDateString('ar-DZ');
+
+        document.getElementById('priceForm').addEventListener('submit', handleSave);
+        document.getElementById('cancelPriceEdit').addEventListener('click', resetForm);
+        document.getElementById('searchPrice').addEventListener('input', render);
+        document.getElementById('filterService').addEventListener('change', render);
+        document.getElementById('printPricesBtn').addEventListener('click', () => window.print());
+        document.getElementById('pricesContainer').addEventListener('click', handleCardClick);
+
+        await loadPrices();
+      }
+
+      function fillServiceSelects() {
+        const formSelect = document.getElementById('priceService');
+        const filterSelect = document.getElementById('filterService');
+        const currentFilter = filterSelect.value;
+        formSelect.innerHTML = '';
+        filterSelect.innerHTML = '<option value="">الكل</option>';
+        services.forEach(service => {
+          formSelect.add(new Option(service, service));
+          filterSelect.add(new Option(service, service));
+        });
+        filterSelect.value = currentFilter;
+      }
+
+      async function loadPrices() {
+        const result = await apiCall('get_prices');
+        if (!result || !result.success) {
+          if (result) showAlert(result.message || 'تعذر تحميل الأسعار.');
+          document.getElementById('pricesContainer').innerHTML = '<p class="empty">تعذر تحميل الأسعار.</p>';
+          return;
+        }
+        services = Array.isArray(result.services) ? result.services : [];
+        prices = Array.isArray(result.prices) ? result.prices : [];
+        fillServiceSelects();
+        render();
+      }
+
+      function render() {
+        const container = document.getElementById('pricesContainer');
+        const term = document.getElementById('searchPrice').value.trim().toLowerCase();
+        const serviceFilter = document.getElementById('filterService').value;
+
+        const visible = prices.filter(p => {
+          if (serviceFilter && p.service !== serviceFilter) return false;
+          if (!term) return true;
+          return `${p.package_name} ${p.description || ''} ${p.service}`.toLowerCase().includes(term);
+        });
+
+        if (!visible.length) {
+          container.innerHTML = prices.length
+            ? '<p class="empty">لا توجد أسعار مطابقة للبحث.</p>'
+            : `<p class="empty">لا توجد أسعار بعد.${isAdmin ? ' أضف أول سعر من النموذج أعلاه.' : ''}</p>`;
+          return;
+        }
+
+        // Keep the service order defined by the server, then any unknown service at the end.
+        const order = [...services, ...new Set(visible.map(p => p.service).filter(s => !services.includes(s)))];
+        let html = '';
+        order.forEach(service => {
+          const items = visible.filter(p => p.service === service);
+          if (!items.length) return;
+          html += `
+            <section class="service-group">
+              <div class="service-title"><h3>${escapeHtml(service)}</h3><span>${items.length} عرض</span></div>
+              <div class="price-grid">
+                ${items.map(renderCard).join('')}
+              </div>
+            </section>`;
+        });
+        container.innerHTML = html;
+      }
+
+      function renderCard(p) {
+        const inactive = Number(p.is_active) !== 1;
+        const actions = isAdmin ? `
+          <div class="card-actions">
+            <button type="button" class="edit" data-id="${escapeHtml(p.id)}">✏️ تعديل</button>
+            <button type="button" class="delete" data-id="${escapeHtml(p.id)}">🗑️ حذف</button>
+          </div>` : '';
+        return `
+          <article class="price-card${inactive ? ' inactive' : ''}">
+            <h4>${escapeHtml(p.package_name)}</h4>
+            ${inactive ? '<span class="badge">مخفي عن المستخدمين</span>' : ''}
+            <div class="price-value">${escapeHtml(formatPrice(p.price))} <small>د.ج</small></div>
+            <div class="price-desc">${escapeHtml(p.description || '')}</div>
+            ${actions}
+          </article>`;
+      }
+
+      function handleCardClick(e) {
+        const btn = e.target.closest('button[data-id]');
+        if (!btn || !isAdmin) return;
+        const price = prices.find(p => String(p.id) === btn.dataset.id);
+        if (!price) return;
+        if (btn.classList.contains('edit')) startEdit(price);
+        else if (btn.classList.contains('delete')) deletePrice(price);
+      }
+
+      function startEdit(p) {
+        document.getElementById('priceId').value = p.id;
+        document.getElementById('priceService').value = p.service;
+        document.getElementById('pricePackage').value = p.package_name;
+        document.getElementById('priceValue').value = Number(p.price).toFixed(2);
+        document.getElementById('priceDescription').value = p.description || '';
+        document.getElementById('priceOrder').value = p.sort_order || 0;
+        document.getElementById('priceActive').checked = Number(p.is_active) === 1;
+        document.getElementById('formTitle').textContent = 'تعديل السعر';
+        document.getElementById('savePriceBtn').textContent = 'حفظ التعديل';
+        document.getElementById('cancelPriceEdit').style.display = 'inline-block';
+        document.getElementById('priceFormCard').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('pricePackage').focus();
+      }
+
+      function resetForm() {
+        document.getElementById('priceForm').reset();
+        document.getElementById('priceId').value = '';
+        document.getElementById('priceOrder').value = 0;
+        document.getElementById('priceActive').checked = true;
+        document.getElementById('formTitle').textContent = 'إضافة سعر جديد';
+        document.getElementById('savePriceBtn').textContent = 'إضافة السعر';
+        document.getElementById('cancelPriceEdit').style.display = 'none';
+      }
+
+      async function handleSave(e) {
+        e.preventDefault();
+        const btn = document.getElementById('savePriceBtn');
+        const data = {
+          id: document.getElementById('priceId').value,
+          service: document.getElementById('priceService').value,
+          package_name: document.getElementById('pricePackage').value.trim(),
+          price: document.getElementById('priceValue').value,
+          description: document.getElementById('priceDescription').value.trim(),
+          sort_order: document.getElementById('priceOrder').value || 0,
+          is_active: document.getElementById('priceActive').checked ? 1 : 0
+        };
+        if (!data.package_name) {
+          showAlert('اسم الباقة مطلوب.');
+          return;
+        }
+        btn.disabled = true;
+        try {
+          const result = await apiCall('save_price', data);
+          if (result && result.success) {
+            showAlert(result.message || 'تم الحفظ بنجاح.', 'success');
+            resetForm();
+            await loadPrices();
+          } else if (result) {
+            showAlert(result.message || 'فشل حفظ السعر.');
+          }
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function deletePrice(p) {
+        if (!confirm(`هل أنت متأكد من حذف "${p.package_name}"؟`)) return;
+        const result = await apiCall('delete_price', { id: p.id });
+        if (result && result.success) {
+          showAlert(result.message || 'تم الحذف.', 'success');
+          if (document.getElementById('priceId').value === String(p.id)) resetForm();
+          await loadPrices();
+        } else if (result) {
+          showAlert(result.message || 'فشل حذف السعر.');
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

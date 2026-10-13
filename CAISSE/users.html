@@ -159,28 +159,30 @@
           const username = escapeHtml(user.username);
           const fullName = escapeHtml(user.full_name);
           const role = escapeHtml(user.role);
+          // mysqli may return is_active as the string "0", which is truthy in JS.
+          const isActive = Number(user.is_active) === 1;
 
           // Prevent admin from acting on themselves
           const isSelf = user.id == currentUser.id;
           let actions = 'لا يمكن التعديل';
 
           if (!isSelf) {
-            const toggleIcon = user.is_active ? '🚫' : '✅';
-            const toggleTitle = user.is_active ? 'تعطيل الحساب' : 'تفعيل الحساب';
+            const toggleIcon = isActive ? '🚫' : '✅';
+            const toggleTitle = isActive ? 'تعطيل الحساب' : 'تفعيل الحساب';
             actions = `
               <button class="action-btn edit-user" data-id="${user.id}" title="تعديل">✏️</button>
-              <button class="action-btn toggle-status" data-id="${user.id}" data-status="${user.is_active}" title="${toggleTitle}">${toggleIcon}</button>
+              <button class="action-btn toggle-status" data-id="${user.id}" data-status="${isActive ? 1 : 0}" title="${toggleTitle}">${toggleIcon}</button>
               <button class="action-btn delete-user" data-id="${user.id}" title="حذف">🗑️</button>
             `;
           }
 
           const row = `
-            <tr style="${!user.is_active ? 'background-color: #f8d7da;' : ''}">
-              <td>${user.id}</td>
+            <tr style="${!isActive ? 'background-color: #f8d7da;' : ''}">
+              <td>${escapeHtml(user.id)}</td>
               <td>${username}</td>
               <td>${fullName}</td>
               <td>${role}</td>
-              <td>${user.is_active ? 'نشط' : 'غير نشط'}</td>
+              <td>${isActive ? 'نشط' : 'غير نشط'}</td>
               <td>${actions}</td>
             </tr>
           `;
@@ -233,7 +235,7 @@
             document.getElementById('edit_password').value = ''; // Clear password field
             document.getElementById('editUserModal').style.display = 'flex';
         } else {
-            showAlert(result.message || 'فشل جلب بيانات المستخدم.', 'danger');
+            showAlert((result && result.message) || 'فشل جلب بيانات المستخدم.', 'danger');
         }
     }
 
@@ -252,7 +254,7 @@
             showAlert('تم تحديث المستخدم بنجاح!', 'success');
             loadUsers();
         } else {
-            alert(result.message || 'فشل تحديث المستخدم.'); // Use alert for modal
+            alert((result && result.message) || 'فشل تحديث المستخدم.'); // Use alert for modal
         }
     }
 
@@ -263,7 +265,7 @@
                 showAlert('تم حذف المستخدم بنجاح.', 'success');
                 loadUsers();
             } else {
-                showAlert(result.message || 'فشل حذف المستخدم.', 'danger');
+                showAlert((result && result.message) || 'فشل حذف المستخدم.', 'danger');
             }
         }
     }
@@ -277,7 +279,7 @@
                 showAlert('تم تحديث حالة المستخدم بنجاح.', 'success');
                 loadUsers();
             } else {
-                showAlert(result.message || 'فشل تحديث حالة المستخدم.', 'danger');
+                showAlert((result && result.message) || 'فشل تحديث حالة المستخدم.', 'danger');
             }
         }
     }
@@ -296,12 +298,13 @@
         document.getElementById('addUserForm').reset();
         loadUsers();
       } else {
-        showAlert(result.message || 'فشل إضافة المستخدم.', 'danger');
+        showAlert((result && result.message) || 'فشل إضافة المستخدم.', 'danger');
       }
     }
 
     function showAlert(message, type = 'danger') {
         const alertBox = document.getElementById('formAlert');
+        if (!alertBox) { alert(message); return; }
         alertBox.textContent = message;
         alertBox.className = `alert alert-${type}`;
         alertBox.style.display = 'block';

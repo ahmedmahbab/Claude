@@ -31,7 +31,9 @@ echo "<h1>المستخدمون في قاعدة البيانات</h1>";
 
 // Check database connection
 if ($conn->connect_error) {
-    echo "<p class='error'>فشل الاتصال بقاعدة البيانات: " . $conn->connect_error . "</p>";
+    echo "<p class='error'>فشل الاتصال بقاعدة البيانات: " . htmlspecialchars($conn->connect_error) . "</p>";
+    echo "</body></html>";
+    exit;
 } else {
     echo "<p class='success'>تم الاتصال بقاعدة البيانات بنجاح</p>";
     
@@ -43,10 +45,10 @@ if ($conn->connect_error) {
         echo "<tr><th>ID</th><th>اسم المستخدم</th><th>الاسم الكامل</th><th>الدور</th><th>نشط</th></tr>";
         while($row = $result->fetch_assoc()) {
             echo "<tr>";
-            echo "<td>" . $row["id"] . "</td>";
-            echo "<td>" . $row["username"] . "</td>";
-            echo "<td>" . $row["full_name"] . "</td>";
-            echo "<td>" . $row["role"] . "</td>";
+            echo "<td>" . htmlspecialchars((string)$row["id"]) . "</td>";
+            echo "<td>" . htmlspecialchars((string)$row["username"]) . "</td>";
+            echo "<td>" . htmlspecialchars((string)$row["full_name"]) . "</td>";
+            echo "<td>" . htmlspecialchars((string)$row["role"]) . "</td>";
             echo "<td>" . ($row["is_active"] ? "نعم" : "لا") . "</td>";
             echo "</tr>";
         }

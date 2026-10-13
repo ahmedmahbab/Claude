@@ -273,6 +273,16 @@
           <div>دينار جزائري</div>
         </div>
         <div class="summary-item">
+          <h3>الاسترجاع</h3>
+          <div class="amount" id="refundAmount">0.00</div>
+          <div><span id="refundCount">0</span> عملية</div>
+        </div>
+        <div class="summary-item">
+          <h3>الصافي</h3>
+          <div class="amount" id="netAmount">0.00</div>
+          <div>دينار جزائري</div>
+        </div>
+        <div class="summary-item">
           <h3>الفترة</h3>
           <div id="reportPeriod">-</div>
         </div>
@@ -394,12 +404,14 @@
           // فصل السجلات المدفوعة عن غير المدفوعة
           const paidRecords = records.filter(record => record['حالة الدفع'] === 'دفع');
           const unpaidRecords = records.filter(record => record['حالة الدفع'] === 'لم يدفع');
-          
+          // الاسترجاع مخزَّن بالسالب؛ نعرضه منفصلاً ونخصمه من الصافي.
+          const refundRecords = records.filter(record => record['حالة الدفع'] === 'استرجاع');
+
           paidRecordsState = paidRecords.slice();
           renderReport();
           renderUnpaidReport(unpaidRecords);
           renderDetailedServiceReport(paidRecords);
-          updateSummary(paidRecords);
+          updateSummary(paidRecords, refundRecords);
         } else {
           document.body.innerHTML = '<div class="container"><div class="card"><h2>خطأ</h2><p>فشل في تحميل بيانات التقرير.</p></div></div>';
         }
@@ -610,7 +622,8 @@
         const sources = [
           { name: 'CAISSE', key: 'CAISSE', class: 'caisse' },
           { name: 'CCP AM', key: 'CCP AM', class: 'ccp-am' },
-          { name: 'CCP IM', key: 'CCP IM', class: 'ccp-im' }
+          { name: 'CCP IM', key: 'CCP IM', class: 'ccp-im' },
+          { name: 'E-PAYMENT', key: 'E-PAYMENT', class: 'e-payment' }
         ];
         
         sources.forEach(source => {
@@ -637,16 +650,22 @@
       container.innerHTML = html;
     }
     
-    function updateSummary(records) {
+    function updateSummary(records, refundRecords = []) {
       // تحديث ملخص التقرير
       document.getElementById('totalRecords').textContent = records.length;
-      
+
       // حساب إجمالي المبالغ
       const totalAmount = records.reduce((sum, record) => {
         return sum + (parseFloat(record['المبلغ']) || 0);
       }, 0);
-      
+      const refundTotal = refundRecords.reduce((sum, record) => {
+        return sum + Math.abs(parseFloat(record['المبلغ']) || 0);
+      }, 0);
+
       document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+      document.getElementById('refundAmount').textContent = refundTotal.toFixed(2);
+      document.getElementById('refundCount').textContent = refundRecords.length;
+      document.getElementById('netAmount').textContent = (totalAmount - refundTotal).toFixed(2);
     }
     
     function updatePrintButtonVisibility() {
@@ -664,13 +683,18 @@
         .map(checkbox => recordById.get(checkbox.dataset.id))
         .filter(Boolean);
       
-      // Open thermal print page with selected operations
+      // Hand the data over through localStorage: the print page reads it on load, which avoids
+      // the race of setting onload after window.open() (and a crash when the popup is blocked).
+      try {
+        localStorage.setItem('printSelectedOperations', JSON.stringify(selectedOperations));
+      } catch (e) {
+        alert('تعذر تجهيز بيانات الطباعة.');
+        return;
+      }
       const printWindow = window.open('print_multiple_thermal.html', '_blank');
-      
-      // Pass data to the print window when it loads
-      printWindow.onload = function() {
-        printWindow.setSelectedOperations(selectedOperations);
-      };
+      if (!printWindow) {
+        alert('يرجى السماح بالنوافذ المنبثقة لهذا الموقع ثم إعادة المحاولة.');
+      }
     }
   </script>
 </body>
